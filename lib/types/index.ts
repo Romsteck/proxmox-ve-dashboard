@@ -502,3 +502,91 @@ export function isAlert(data: unknown): data is Alert {
 export function isAppSettings(data: unknown): data is AppSettings {
   return AppSettingsSchema.safeParse(data).success;
 }
+
+// Connection management schemas
+export const ConnectionStatusSchema = z.enum(['connected', 'connecting', 'disconnected', 'error']);
+
+export const ConnectionConfigSchema = z.object({
+  host: z.string().min(1, 'Host is required'),
+  port: z.number().min(1).max(65535).default(8006),
+  username: z.string().min(1, 'Username is required'),
+  token: z.string().min(1, 'Token is required'),
+  insecureTLS: z.boolean().default(false),
+});
+
+export const ConnectionStateSchema = z.object({
+  status: ConnectionStatusSchema,
+  config: ConnectionConfigSchema.nullable(),
+  lastConnected: z.date().nullable(),
+  error: z.string().nullable(),
+  isValidating: z.boolean().default(false),
+});
+
+export const ConnectionErrorSchema = z.object({
+  type: z.enum(['network', 'authentication', 'timeout', 'validation', 'unknown']),
+  message: z.string(),
+  code: z.string().optional(),
+  timestamp: z.date(),
+});
+
+export const ConnectionTestResultSchema = z.object({
+  success: z.boolean(),
+  error: ConnectionErrorSchema.optional(),
+  responseTime: z.number().optional(),
+  serverInfo: z.object({
+    version: z.string().optional(),
+    release: z.string().optional(),
+  }).optional(),
+});
+
+// TypeScript types derived from connection schemas
+export type ConnectionStatus = z.infer<typeof ConnectionStatusSchema>;
+export type ConnectionConfig = z.infer<typeof ConnectionConfigSchema>;
+export type ConnectionState = z.infer<typeof ConnectionStateSchema>;
+export type ConnectionError = z.infer<typeof ConnectionErrorSchema>;
+export type ConnectionTestResult = z.infer<typeof ConnectionTestResultSchema>;
+
+// Validation functions for connection schemas
+export function validateConnectionConfig(data: unknown): ConnectionConfig {
+  return ConnectionConfigSchema.parse(data);
+}
+
+export function validateConnectionState(data: unknown): ConnectionState {
+  return ConnectionStateSchema.parse(data);
+}
+
+export function validateConnectionTestResult(data: unknown): ConnectionTestResult {
+  return ConnectionTestResultSchema.parse(data);
+}
+
+// Safe validation functions for connection schemas
+export function safeValidateConnectionConfig(data: unknown): { success: true; data: ConnectionConfig } | { success: false; error: string } {
+  try {
+    const validated = ConnectionConfigSchema.parse(data);
+    return { success: true, data: validated };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Validation failed' };
+  }
+}
+
+export function safeValidateConnectionState(data: unknown): { success: true; data: ConnectionState } | { success: false; error: string } {
+  try {
+    const validated = ConnectionStateSchema.parse(data);
+    return { success: true, data: validated };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Validation failed' };
+  }
+}
+
+// Type guards for connection schemas
+export function isConnectionConfig(data: unknown): data is ConnectionConfig {
+  return ConnectionConfigSchema.safeParse(data).success;
+}
+
+export function isConnectionState(data: unknown): data is ConnectionState {
+  return ConnectionStateSchema.safeParse(data).success;
+}
+
+export function isConnectionTestResult(data: unknown): data is ConnectionTestResult {
+  return ConnectionTestResultSchema.safeParse(data).success;
+}
