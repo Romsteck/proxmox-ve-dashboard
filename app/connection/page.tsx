@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMultiConnection, useConnectionContext } from '@/lib/contexts/ConnectionContext';
 import { ConnectionConfig, ConnectionStatus } from '@/lib/types';
@@ -11,10 +11,16 @@ function ServerForm({
   initial,
   onSubmit,
   onCancel,
+  isSubmitting,
+  error,
+  success,
 }: {
   initial?: Partial<ConnectionConfig>;
-  onSubmit: (config: ConnectionConfig) => void;
+  onSubmit: (config: ConnectionConfig) => Promise<void> | void;
   onCancel: () => void;
+  isSubmitting?: boolean;
+  error?: string | null;
+  success?: boolean;
 }) {
   const [host, setHost] = useState(initial?.host || '');
   const [port, setPort] = useState(initial?.port?.toString() || '8006');
@@ -42,6 +48,7 @@ function ServerForm({
           value={host}
           onChange={e => setHost(e.target.value)}
           required
+          disabled={isSubmitting}
         />
       </div>
       <div>
@@ -54,6 +61,7 @@ function ServerForm({
           min={1}
           max={65535}
           required
+          disabled={isSubmitting}
         />
       </div>
       <div>
@@ -63,6 +71,7 @@ function ServerForm({
           value={username}
           onChange={e => setUsername(e.target.value)}
           required
+          disabled={isSubmitting}
         />
       </div>
       <div>
@@ -72,6 +81,7 @@ function ServerForm({
           value={token}
           onChange={e => setToken(e.target.value)}
           required
+          disabled={isSubmitting}
         />
       </div>
       <div className="flex items-center gap-2">
@@ -80,12 +90,21 @@ function ServerForm({
           checked={insecureTLS}
           onChange={e => setInsecureTLS(e.target.checked)}
           id="insecureTLS"
+          disabled={isSubmitting}
         />
         <label htmlFor="insecureTLS">Allow insecure TLS</label>
       </div>
+      {error && (
+        <div className="text-red-600 text-sm">{error}</div>
+      )}
+      {success && (
+        <div className="text-green-600 text-sm">Server added successfully!</div>
+      )}
       <div className="flex gap-2 mt-2">
-        <Button type="submit">Save</Button>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button type="submit" loading={isSubmitting} disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : 'Save'}
+        </Button>
+        <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
       </div>
@@ -114,18 +133,76 @@ export default function ConnectionPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editInitial, setEditInitial] = useState<Partial<ConnectionConfig> | null>(null);
 
+  // Add server form feedback state
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [addSuccess, setAddSuccess] = useState(false);
+
+  // Server list from API
+  const [servers, setServers] = useState<any[]>([]);
+  const [serversLoading, setServersLoading] = useState(false);
+  const [serversError, setServersError] = useState<string | null>(null);
+
+  // Fetch servers from API
+  const fetchServers = useCallback(async () => {
+    setServersLoading(true);
+    setServersError(null);
+    try {
+      const res = await fetch('/api/servers');
+      if (!res.ok) throw new Error('Failed to fetch servers');
+      const data = await res.json();
+      setServers(Array.isArray(data) ? data : data.servers || []);
+    } catch (err: any) {
+      setServersError(err.message || 'Failed to fetch servers');
+    } finally {
+      setServersLoading(false);
+    }
+  }, []);
+
+  // Fetch on mount and after successful add
+  useEffect(() => {
+    fetchServers();
+  }, [fetchServers]);
+
+  useEffect(() => {
+    if (addSuccess) {
+      fetchServers();
+    }
+  }, [addSuccess, fetchServers]);
+
   // Redirect if connected
-  React.useEffect(() => {
+  useEffect(() => {
     if (isConnected) {
       router.push('/');
     }
   }, [isConnected, router]);
 
-  // Add server handler
-  function handleAdd(config: ConnectionConfig) {
-    const id = `${config.host}:${config.port}`;
-    addConnection(id, config);
-    setShowAdd(false);
+  // Add server handler (local only, but triggers refetch)
+  async function handleAdd(config: ConnectionConfig) {
+    setAddError(null);
+    setAddSuccess(false);
+    setAddLoading(true);
+    try {
+      // POST to /api/servers
+      const res = await fetch('/api/servers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData?.error || 'Failed to add server.');
+      }
+      setAddSuccess(true);
+      setAddLoading(false);
+      setTimeout(() => {
+        setShowAdd(false);
+        setAddSuccess(false);
+      }, 1000);
+    } catch (err: any) {
+      setAddError(err.message || 'Failed to add server.');
+      setAddLoading(false);
+    }
   }
 
   // Edit server handler
@@ -167,83 +244,34 @@ export default function ConnectionPage() {
       <h1 className="text-2xl font-bold mb-4">Proxmox Servers</h1>
       <Card className="mb-4">
         <div className="flex justify-between items-center mb-2">
-          <span className="font-semibold">Saved Servers</span>
+          <span className="font-semibold">Server List</span>
           <Button onClick={() => setShowAdd(true)}>Add Server</Button>
         </div>
         <ul className="divide-y">
-          {Object.entries(connections).length === 0 && (
-            <li className="py-4 text-gray-500 text-center">No servers saved.</li>
+          {serversLoading && (
+            <li className="py-4 text-gray-500 text-center">Loading servers...</li>
           )}
-          {Object.entries(connections).map(([id, conn]) => {
-            const isActive = id === activeServerId;
-            const status = conn.status as ConnectionStatus;
-            return (
-              <li
-                key={id}
-                className={`flex flex-col md:flex-row md:items-center justify-between gap-2 py-3 px-2 rounded ${isActive ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500' : status === 'connecting' ? 'bg-yellow-400 animate-pulse' : status === 'error' ? 'bg-red-500' : 'bg-gray-400'}`}></span>
-                    <span className="font-mono">{conn.config?.host}:{conn.config?.port}</span>
-                    {isActive && (
-                      <span className="ml-2 px-2 py-0.5 text-xs bg-blue-200 text-blue-800 rounded">Active</span>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    User: {conn.config?.username}
-                  </div>
-                  {conn.error && (
-                    <div className="text-xs text-red-600">Error: {conn.error}</div>
-                  )}
-                  {conn.lastConnected && (
-                    <div className="text-xs text-gray-400">
-                      Last connected: {new Date(conn.lastConnected).toLocaleString()}
-                    </div>
-                  )}
+          {serversError && (
+            <li className="py-4 text-red-600 text-center">{serversError}</li>
+          )}
+          {!serversLoading && !serversError && servers.length === 0 && (
+            <li className="py-4 text-gray-500 text-center">No servers found.</li>
+          )}
+          {!serversLoading && !serversError && servers.map((server: any, idx: number) => (
+            <li
+              key={server._id || `${server.host}:${server.port}` || idx}
+              className="flex flex-col md:flex-row md:items-center justify-between gap-2 py-3 px-2 rounded"
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono">{server.host}:{server.port}</span>
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  {!isActive && (
-                    <Button size="sm" onClick={() => handleSetActive(id)}>
-                      Set Active
-                    </Button>
-                  )}
-                  {isActive && status !== 'connected' && (
-                    <Button
-                      size="sm"
-                      loading={isConnecting}
-                      onClick={() => conn.config && handleConnect(id, conn.config)}
-                    >
-                      Connect
-                    </Button>
-                  )}
-                  {isActive && status === 'connected' && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={handleDisconnect}
-                    >
-                      Disconnect
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => conn.config && startEdit(id, conn.config)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => handleRemove(id)}
-                  >
-                    Remove
-                  </Button>
+                <div className="text-xs text-gray-500">
+                  User: {server.username}
                 </div>
-              </li>
-            );
-          })}
+              </div>
+            </li>
+          ))}
         </ul>
       </Card>
       {/* Add Server Modal */}
@@ -253,6 +281,9 @@ export default function ConnectionPage() {
           <ServerForm
             onSubmit={handleAdd}
             onCancel={() => setShowAdd(false)}
+            isSubmitting={addLoading}
+            error={addError}
+            success={addSuccess}
           />
         </Card>
       )}
