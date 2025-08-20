@@ -11,7 +11,7 @@ import {
 
 export class ConnectionService {
   private static readonly DEFAULT_TIMEOUT = 10000; // 10 secondes
-  private static readonly TEST_ENDPOINT = '/api2/json/version';
+  private static readonly TEST_ENDPOINT = '/api/proxmox/version';
 
   /**
    * Teste la connexion au serveur Proxmox
@@ -23,16 +23,21 @@ export class ConnectionService {
       // Valider la configuration
       const validatedConfig = validateConnectionConfig(config);
       
-      // Construire l'URL de test
-      const protocol = validatedConfig.insecureTLS ? 'http' : 'https';
-      const baseUrl = `${protocol}://${validatedConfig.host}:${validatedConfig.port}`;
-      const testUrl = `${baseUrl}${this.TEST_ENDPOINT}`;
+      // Construire l'URL de test (via route proxy interne pour éviter CORS)
+      // Proxmox API sur 8006 est TOUJOURS en HTTPS, même si on veut ignorer le certificat
+      const protocol = 'https';
+      const testUrl = `${this.TEST_ENDPOINT}?host=${encodeURIComponent(validatedConfig.host)}&port=${encodeURIComponent(String(validatedConfig.port))}&protocol=${encodeURIComponent(protocol)}&verifyTLS=${encodeURIComponent(String(!validatedConfig.insecureTLS))}`;
 
       // Créer les headers d'authentification
+      // Note: le test de version ne nécessite pas d'auth côté Proxmox.
+      // Nous n'envoyons pas le token à l'API externe. La route proxy ne s'en sert pas.
       const headers = new Headers({
         'Content-Type': 'application/json',
-        'Authorization': `PVEAPIToken=${validatedConfig.username}=${validatedConfig.token}`,
       });
+      // Ajouter le token d'API si présent (certains Proxmox protègent /version)
+      if (validatedConfig.token) {
+        headers.set('Authorization', `PVEAPIToken=${validatedConfig.username}=${validatedConfig.token}`);
+      }
 
       // Effectuer la requête de test
       const controller = new AbortController();
@@ -51,12 +56,17 @@ export class ConnectionService {
         const responseTime = Date.now() - startTime;
 
         if (!response.ok) {
+          let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          if (response.status === 502 || response.status === 504) {
+            errorMessage = "Impossible de joindre le serveur Proxmox distant depuis le backend. " +
+              "Vérifiez la connectivité réseau, l’accessibilité du port ou le déploiement du backend sur le même réseau que Proxmox.";
+          }
           return {
             success: false,
             responseTime,
             error: this.createConnectionError(
               response.status === 401 ? 'authentication' : 'network',
-              `HTTP ${response.status}: ${response.statusText}`,
+              errorMessage,
               response.status.toString()
             ),
           };
@@ -261,6 +271,46 @@ export class ConnectionService {
   static generateConfigKey(config: ConnectionConfig): string {
     return `${config.host}:${config.port}:${config.username}`;
   }
+  /**
+   * Supprime un serveur via l’API
+   * @param id Identifiant du serveur à supprimer
+   * @throws Error si la requête échoue (HTTP >= 400)
+   */
+  static async deleteServer(id: string): Promise<void> {
+    const response = await fetch('/api/servers', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    });
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(`Erreur suppression serveur (HTTP ${response.status}): ${message}`);
+    }
+  }
+
+  /**
+   * Met à jour un serveur via l’API
+   * @param id Identifiant du serveur à mettre à jour
+   * @param data Nouvelles données du serveur
+   * @returns Le serveur mis à jour
+   * @throws Error si la requête échoue (HTTP >= 400)
+   */
+  static async updateServer(id: string, data: object): Promise<any> {
+    const response = await fetch('/api/servers', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id, ...data }),
+    });
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(`Erreur mise à jour serveur (HTTP ${response.status}): ${message}`);
+    }
+    return response.json();
+  }
 }
 
 // Export des fonctions utilitaires pour une utilisation directe
@@ -272,4 +322,6 @@ export const {
   isConfigurationComplete,
   sanitizeConfig,
   generateConfigKey,
+  deleteServer,
+  updateServer,
 } = ConnectionService;

@@ -7,6 +7,8 @@ import { ConnectionConfig, ConnectionStatus } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
+import { deleteServer, updateServer } from '@/lib/services/connectionService';
+ 
 function ServerForm({
   initial,
   onSubmit,
@@ -138,10 +140,16 @@ export default function ConnectionPage() {
   const [addError, setAddError] = useState<string | null>(null);
   const [addSuccess, setAddSuccess] = useState(false);
 
+  // Connexion feedback state
+  const [connectError, setConnectError] = useState<string | null>(null);
+
   // Server list from API
   const [servers, setServers] = useState<any[]>([]);
   const [serversLoading, setServersLoading] = useState(false);
   const [serversError, setServersError] = useState<string | null>(null);
+  
+  // Erreur pour suppression/modification
+  const [serverActionError, setServerActionError] = useState<string | null>(null);
 
   // Fetch servers from API
   const fetchServers = useCallback(async () => {
@@ -177,6 +185,16 @@ export default function ConnectionPage() {
     }
   }, [isConnected, router]);
 
+  // Connect automatically when activeServerId changes
+  useEffect(() => {
+    if (activeServerId) {
+      const server = servers.find(s => (s._id || s.id) === activeServerId);
+      if (server && !isConnected && !isConnecting) {
+        connect(server);
+      }
+    }
+  }, [activeServerId, servers, connect, isConnected, isConnecting]);
+
   // Add server handler (local only, but triggers refetch)
   async function handleAdd(config: ConnectionConfig) {
     setAddError(null);
@@ -206,11 +224,25 @@ export default function ConnectionPage() {
   }
 
   // Edit server handler
-  function handleEdit(config: ConnectionConfig) {
+  const [editLoading, setEditLoading] = React.useState(false);
+  async function handleEdit(config: ConnectionConfig) {
     if (editId) {
-      addConnection(editId, config); // Overwrite
-      setEditId(null);
-      setEditInitial(null);
+      setEditLoading(true);
+      setServerActionError(null);
+      try {
+        const updated = await updateServer(editId, config);
+        setServers(servers =>
+          servers.map(s =>
+            (s._id === editId ? { ...s, ...updated } : s)
+          )
+        );
+        setEditId(null);
+        setEditInitial(null);
+      } catch (err: any) {
+        setServerActionError(err.message || 'Erreur lors de la modification.');
+      } finally {
+        setEditLoading(false);
+      }
     }
   }
 
@@ -232,8 +264,9 @@ export default function ConnectionPage() {
 
   // Connect/disconnect
   async function handleConnect(id: string, config: ConnectionConfig) {
+    setConnectError(null);
     setActiveServer(id);
-    await connect(config);
+    // connect will be called in useEffect after activeServerId update
   }
   function handleDisconnect() {
     disconnect();
@@ -247,6 +280,12 @@ export default function ConnectionPage() {
           <span className="font-semibold">Server List</span>
           <Button onClick={() => setShowAdd(true)}>Add Server</Button>
         </div>
+        {connectError && (
+          <div className="text-red-600 text-sm mb-2">{connectError}</div>
+        )}
+        {serverActionError && (
+          <div className="text-red-600 text-sm mb-2">{serverActionError}</div>
+        )}
         <ul className="divide-y">
           {serversLoading && (
             <li className="py-4 text-gray-500 text-center">Loading servers...</li>
@@ -268,6 +307,41 @@ export default function ConnectionPage() {
                 </div>
                 <div className="text-xs text-gray-500">
                   User: {server.username}
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    onClick={() => handleConnect(server._id || `${server.host}:${server.port}`, server)}
+                    disabled={isConnecting && activeServerId === (server._id || `${server.host}:${server.port}`)}
+                    loading={isConnecting && activeServerId === (server._id || `${server.host}:${server.port}`)}
+                  >
+                    {isConnecting && activeServerId === (server._id || `${server.host}:${server.port}`) ? 'Connexion en cours...' : 'Se connecter'}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setServerActionError(null);
+                      startEdit(server._id || `${server.host}:${server.port}`, server);
+                    }}
+                  >
+                    Modifier
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={async () => {
+                      setServerActionError(null);
+                      if (window.confirm('Supprimer ce serveur ?')) {
+                        try {
+                          await deleteServer(server._id);
+                          setServers(servers => servers.filter(s => s._id !== server._id));
+                        } catch (err: any) {
+                          setServerActionError(err.message || 'Erreur lors de la suppression.');
+                          alert(err.message || 'Erreur lors de la suppression.');
+                        }
+                      }
+                    }}
+                  >
+                    Supprimer
+                  </Button>
                 </div>
               </div>
             </li>
@@ -297,7 +371,10 @@ export default function ConnectionPage() {
             onCancel={() => {
               setEditId(null);
               setEditInitial(null);
+              setServerActionError(null);
             }}
+            isSubmitting={editLoading}
+            error={serverActionError}
           />
         </Card>
       )}

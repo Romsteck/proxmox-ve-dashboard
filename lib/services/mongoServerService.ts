@@ -31,12 +31,15 @@ async function getDb(): Promise<Db> {
  */
 export async function getServers(): Promise<Document[]> {
   try {
+    console.log("mongoServerService: Connecting to database...");
     const db = await getDb();
     const collection: Collection = db.collection(COLLECTION_NAME);
+    console.log(`mongoServerService: Fetching servers from collection '${COLLECTION_NAME}'`);
     const servers = await collection.find({}).toArray();
+    console.log(`mongoServerService: Found ${servers.length} servers`);
     return servers;
   } catch (error) {
-    console.error("Error fetching servers:", error);
+    console.error("mongoServerService: Error fetching servers:", error);
     return [];
   }
 }
@@ -48,19 +51,22 @@ export async function getServers(): Promise<Document[]> {
  */
 export async function addServer(server: Document): Promise<Document | null> {
   try {
+    console.log("mongoServerService: Connecting to database for insert...");
     const db = await getDb();
     const collection: Collection = db.collection(COLLECTION_NAME);
+    console.log(`mongoServerService: Adding server to collection '${COLLECTION_NAME}'`, server);
     const result: InsertOneResult<Document> = await collection.insertOne(server);
     if (result.acknowledged) {
       // Fetch and return the inserted document
       const inserted = await collection.findOne({ _id: result.insertedId });
+      console.log("mongoServerService: Server added successfully", inserted);
       return inserted || null;
     } else {
-      console.error("Insert not acknowledged:", result);
+      console.error("mongoServerService: Insert not acknowledged:", result);
       return null;
     }
   } catch (error) {
-    console.error("Error adding server:", error);
+    console.error("mongoServerService: Error adding server:", error);
     return null;
   }
 }
