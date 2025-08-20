@@ -159,7 +159,18 @@ export default function ConnectionPage() {
       const res = await fetch('/api/servers');
       if (!res.ok) throw new Error('Failed to fetch servers');
       const data = await res.json();
-      setServers(Array.isArray(data) ? data : data.servers || []);
+      const servers = Array.isArray(data) ? data : data.servers || [];
+      
+      console.log("[DEBUG fetchServers] Serveurs récupérés:", servers.map((s: any) => ({
+        _id: s._id,
+        id: s.id,
+        host: s.host,
+        port: s.port,
+        hasValidId: s._id && /^[0-9a-fA-F]{24}$/.test(s._id),
+        fallbackId: `${s.host}:${s.port}`
+      })));
+      
+      setServers(servers);
     } catch (err: any) {
       setServersError(err.message || 'Failed to fetch servers');
     } finally {
@@ -178,6 +189,31 @@ export default function ConnectionPage() {
     }
   }, [addSuccess, fetchServers]);
 
+  // NOUVELLE FONCTIONNALITÉ : Synchronisation automatique périodique
+  useEffect(() => {
+    console.log("[DEBUG useEffect] Mise en place de la synchronisation automatique");
+    
+    // Synchronisation toutes les 30 secondes pour éviter les désynchronisations
+    const syncInterval = setInterval(() => {
+      console.log("[DEBUG syncInterval] Synchronisation automatique des serveurs");
+      fetchServers();
+    }, 30000); // 30 secondes
+
+    // Synchronisation lors du focus de la fenêtre (retour sur l'onglet)
+    const handleFocus = () => {
+      console.log("[DEBUG handleFocus] Fenêtre refocalisée, synchronisation des serveurs");
+      fetchServers();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    // Nettoyage
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [fetchServers]);
+
   // Redirect if connected
   useEffect(() => {
     if (isConnected) {
@@ -190,7 +226,7 @@ export default function ConnectionPage() {
     if (activeServerId) {
       const server = servers.find(s => (s._id || s.id) === activeServerId);
       if (server && !isConnected && !isConnecting) {
-        connect(server);
+        connect(server._id || `${server.host}:${server.port}`, server);
       }
     }
   }, [activeServerId, servers, connect, isConnected, isConnecting]);
@@ -223,23 +259,62 @@ export default function ConnectionPage() {
     }
   }
 
-  // Edit server handler
+  // Edit server handler simplifié sans validation préventive
   const [editLoading, setEditLoading] = React.useState(false);
   async function handleEdit(config: ConnectionConfig) {
     if (editId) {
+      console.log("[DEBUG handleEdit] Tentative de modification avec ID:", {
+        editId,
+        type: typeof editId,
+        length: editId.length,
+        isValidObjectId: /^[0-9a-fA-F]{24}$/.test(editId),
+        config: { host: config.host, port: config.port }
+      });
+      
       setEditLoading(true);
       setServerActionError(null);
+      
       try {
+        console.log("[DEBUG handleEdit] Procédure de mise à jour directe...");
         const updated = await updateServer(editId, config);
+        
+        // Mise à jour optimiste de l'état local
         setServers(servers =>
           servers.map(s =>
-            (s._id === editId ? { ...s, ...updated } : s)
+            (s._id === editId || (s._id?.toString && s._id.toString() === editId) ? { ...s, ...updated.server } : s)
           )
         );
         setEditId(null);
         setEditInitial(null);
+        setServerActionError(null);
+        
+        // Confirmation de succès
+        console.log("[DEBUG handleEdit] Modification réussie");
+        
       } catch (err: any) {
-        setServerActionError(err.message || 'Erreur lors de la modification.');
+        console.log("[DEBUG handleEdit] Erreur capturée:", {
+          errorMessage: err.message,
+          errorType: typeof err,
+          errorName: err.name,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Analyser le message d'erreur pour détecter les erreurs 404
+        const httpStatusMatch = err.message?.match(/HTTP (\d+)/);
+        const httpStatus = httpStatusMatch ? parseInt(httpStatusMatch[1]) : null;
+        const isActual404 = httpStatus === 404 || err.message?.includes('Aucun serveur trouvé avec cet ID');
+        
+        if (isActual404) {
+          console.log("[DEBUG handleEdit] Erreur 404 détectée, synchronisation de la liste...");
+          // Synchroniser avec la base pour avoir l'état actuel
+          await fetchServers();
+          setEditId(null);
+          setEditInitial(null);
+          setServerActionError('Ce serveur n\'existe plus. La liste a été mise à jour.');
+        } else {
+          console.log("[DEBUG handleEdit] Autre type d'erreur:", err.message);
+          setServerActionError(err.message || 'Erreur lors de la modification.');
+        }
       } finally {
         setEditLoading(false);
       }
@@ -258,6 +333,13 @@ export default function ConnectionPage() {
 
   // Start editing
   function startEdit(id: string, config: ConnectionConfig) {
+    console.log("[DEBUG startEdit] ID reçu:", {
+      id,
+      type: typeof id,
+      length: id.length,
+      isValidObjectId: /^[0-9a-fA-F]{24}$/.test(id),
+      config: { host: config.host, port: config.port }
+    });
     setEditId(id);
     setEditInitial(config);
   }
@@ -268,14 +350,21 @@ export default function ConnectionPage() {
   // puis tente d'établir la connexion via le contexte de connexion.
   // En cas d'échec, elle capture l'erreur et met à jour l'état d'erreur pour affichage.
   async function handleConnect(id: string, config: ConnectionConfig) {
+    console.log("[handleConnect] DÉBUT", { id, config, activeServerId, isConnected, isConnecting, date: new Date().toISOString() });
     setConnectError(null); // Réinitialise l'erreur de connexion avant de tenter la connexion
-    setActiveServer(id); // Définit le serveur sélectionné comme actif
+    if (id !== activeServerId) {
+      console.log("[handleConnect] setActiveServer", { id, prevActiveServerId: activeServerId });
+      setActiveServer(id); // Met à jour le serveur actif seulement si différent
+    }
     try {
-      await connect(config); // Tente la connexion avec la configuration fournie
+      const result = await connect(id, config); // Tente la connexion avec la configuration fournie
+      console.log("[handleConnect] Résultat connect", { result, date: new Date().toISOString() });
     } catch (error) {
       // En cas d'erreur, met à jour l'état avec le message d'erreur approprié
+      console.log("[handleConnect] ERREUR", { error, date: new Date().toISOString() });
       setConnectError(error instanceof Error ? error.message : 'Connection failed');
     }
+    console.log("[handleConnect] FIN", { id, config, activeServerId, isConnected, isConnecting, date: new Date().toISOString() });
   }
   function handleDisconnect() {
     disconnect();
@@ -330,7 +419,15 @@ export default function ConnectionPage() {
                     variant="secondary"
                     onClick={() => {
                       setServerActionError(null);
-                      startEdit(server._id || `${server.host}:${server.port}`, server);
+                      const serverId = server._id || `${server.host}:${server.port}`;
+                      console.log("[DEBUG onClick Modifier] Serveur sélectionné:", {
+                        server_id: server._id,
+                        server_id_type: typeof server._id,
+                        fallback_id: `${server.host}:${server.port}`,
+                        final_id: serverId,
+                        isValidObjectId: serverId && /^[0-9a-fA-F]{24}$/.test(serverId)
+                      });
+                      startEdit(serverId, server);
                     }}
                   >
                     Modifier
@@ -339,13 +436,38 @@ export default function ConnectionPage() {
                     variant="secondary"
                     onClick={async () => {
                       setServerActionError(null);
-                      if (window.confirm('Supprimer ce serveur ?')) {
+                      if (window.confirm('Supprimer ce serveur ?')) {
                         try {
+                          console.log("[DEBUG handleDelete] Tentative de suppression:", {
+                            serverId: server._id,
+                            serverHost: server.host,
+                            serverPort: server.port
+                          });
+                          
                           await deleteServer(server._id);
+                          
+                          // Mise à jour optimiste de l'état local
                           setServers(servers => servers.filter(s => s._id !== server._id));
+                          console.log("[DEBUG handleDelete] Suppression réussie");
+                          
                         } catch (err: any) {
-                          setServerActionError(err.message || 'Erreur lors de la suppression.');
-                          alert(err.message || 'Erreur lors de la suppression.');
+                          console.log("[DEBUG handleDelete] Erreur lors de la suppression:", {
+                            error: err.message,
+                            serverId: server._id
+                          });
+                          
+                          // Vérifier si c'est une erreur 404 (serveur déjà supprimé)
+                          const httpStatusMatch = err.message?.match(/HTTP (\d+)/);
+                          const httpStatus = httpStatusMatch ? parseInt(httpStatusMatch[1]) : null;
+                          const isActual404 = httpStatus === 404 || err.message?.includes('Aucun serveur trouvé');
+                          
+                          if (isActual404) {
+                            console.log("[DEBUG handleDelete] Serveur déjà supprimé, synchronisation de la liste...");
+                            await fetchServers(); // Synchroniser la liste
+                            setServerActionError('Ce serveur avait déjà été supprimé. La liste a été mise à jour.');
+                          } else {
+                            setServerActionError(err.message || 'Erreur lors de la suppression.');
+                          }
                         }
                       }
                     }}

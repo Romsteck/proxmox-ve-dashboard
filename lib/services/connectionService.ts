@@ -291,25 +291,100 @@ export class ConnectionService {
   }
 
   /**
-   * Met à jour un serveur via l’API
+   * Met à jour un serveur via l'API avec gestion d'erreur améliorée
    * @param id Identifiant du serveur à mettre à jour
    * @param data Nouvelles données du serveur
    * @returns Le serveur mis à jour
    * @throws Error si la requête échoue (HTTP >= 400)
    */
   static async updateServer(id: string, data: object): Promise<any> {
-    const response = await fetch('/api/servers', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id, ...data }),
+    console.log("[DEBUG updateServer] Envoi de la requête PUT:", {
+      id,
+      type: typeof id,
+      length: id.length,
+      isValidObjectId: /^[0-9a-fA-F]{24}$/.test(id),
+      data,
+      payload: { id, ...data },
+      timestamp: new Date().toISOString()
     });
-    if (!response.ok) {
-      const message = await response.text();
-      throw new Error(`Erreur mise à jour serveur (HTTP ${response.status}): ${message}`);
+    
+    try {
+      const response = await fetch(`/api/servers/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      console.log("[DEBUG updateServer] Réponse reçue:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        let errorDetails = '';
+        
+        try {
+          const errorData = await response.json();
+          errorDetails = errorData.error || errorData.message || '';
+          if (errorDetails) {
+            errorMessage = errorDetails;
+          }
+        } catch {
+          // Si on ne peut pas parser le JSON, utiliser le texte brut
+          try {
+            errorDetails = await response.text();
+            if (errorDetails) {
+              errorMessage = errorDetails;
+            }
+          } catch {
+            // Garder le message HTTP par défaut
+          }
+        }
+        
+        console.error("[DEBUG updateServer] Erreur de l'API:", {
+          status: response.status,
+          statusText: response.statusText,
+          errorMessage,
+          errorDetails,
+          id,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Messages d'erreur plus informatifs selon le code de statut
+        if (response.status === 404) {
+          throw new Error(`Erreur mise à jour serveur (HTTP ${response.status}): ${errorMessage}`);
+        } else if (response.status === 400) {
+          throw new Error(`Données invalides (HTTP ${response.status}): ${errorMessage}`);
+        } else if (response.status >= 500) {
+          throw new Error(`Erreur serveur (HTTP ${response.status}): ${errorMessage}`);
+        } else {
+          throw new Error(`Erreur mise à jour serveur (HTTP ${response.status}): ${errorMessage}`);
+        }
+      }
+      
+      const result = await response.json();
+      console.log("[DEBUG updateServer] Mise à jour réussie:", {
+        result,
+        timestamp: new Date().toISOString()
+      });
+      
+      return result;
+      
+    } catch (error) {
+      // Gestion des erreurs réseau ou autres erreurs non-HTTP
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error("[DEBUG updateServer] Erreur réseau:", error.message);
+        throw new Error(`Erreur de connexion réseau: ${error.message}`);
+      }
+      
+      // Re-lancer l'erreur si c'est déjà une erreur HTTP formatée
+      throw error;
     }
-    return response.json();
   }
 }
 

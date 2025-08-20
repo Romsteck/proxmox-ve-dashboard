@@ -22,12 +22,18 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## ⚠️ Limitations réseau / Backend
 
-Pour que l’application fonctionne correctement, le backend Next.js (API `/api/proxmox/*`) doit pouvoir accéder au(x) serveur(s) Proxmox distant(s) via le réseau (IP et port configurés).  
+Pour que l’application fonctionne correctement, le backend Next.js (API `/api/proxmox/*`) doit pouvoir accéder au(x) serveur(s) Proxmox distant(s) via le réseau (IP et port configurés).
 - Si vous exécutez Next.js en local, il doit être sur le même réseau que Proxmox, et le port (par défaut 8006) doit être ouvert.
 - Si le backend est déployé sur un serveur distant (Vercel, etc.), il doit également pouvoir joindre le serveur Proxmox.
 - En cas d’échec de connexion (erreur 502/504), vérifiez la configuration réseau, les règles de pare-feu et l’accessibilité du port.
 
 L’application ne peut pas contourner ces limitations réseau : le backend agit comme un proxy sécurisé pour éviter d’exposer les identifiants côté client.
+
+## Connexion améliorée
+
+La logique de connexion a été corrigée pour mieux gérer les erreurs lors de la tentative de connexion à un serveur Proxmox.
+Le bouton "Se connecter" affiche désormais un état de chargement pendant la connexion et affiche un message d'erreur clair en cas d'échec.
+Cette amélioration assure un meilleur retour utilisateur et une gestion plus robuste des connexions.
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
