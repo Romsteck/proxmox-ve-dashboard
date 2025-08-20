@@ -244,9 +244,9 @@ const AlertsPage: React.FC = () => {
   const [editingThreshold, setEditingThreshold] = useState<AlertThreshold | undefined>();
 
   // Fetch alerts
-  const fetchAlerts = useCallback(async () => {
+  const fetchAlerts = useCallback(async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       setError(null);
       const response = await fetch('/api/proxmox/alerts');
       if (!response.ok) {
@@ -258,14 +258,14 @@ const AlertsPage: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
       showToast.error('Failed to load alerts');
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, []);
 
   // Initial load and periodic refresh
   useEffect(() => {
-    fetchAlerts();
-    const interval = setInterval(fetchAlerts, 30000); // Refresh every 30 seconds
+    fetchAlerts(true); // Show loading on initial fetch
+    const interval = setInterval(() => fetchAlerts(false), 30000); // No loading for background refresh
     return () => clearInterval(interval);
   }, [fetchAlerts]);
 
@@ -370,7 +370,7 @@ const AlertsPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" onClick={fetchAlerts} loading={isLoading}>
+            <Button variant="secondary" size="sm" onClick={() => fetchAlerts(true)} loading={isLoading}>
               <Icon icon={RefreshCw} size="sm" className="mr-2" />
               Refresh
             </Button>
@@ -557,8 +557,9 @@ const AlertsPage: React.FC = () => {
                     filteredAlerts.map((alert) => (
                       <div
                         key={alert.id}
+                        role="listitem"
                         className={`rounded-lg border p-3 ${
-                          alert.acknowledged 
+                          alert.acknowledged
                             ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50'
                             : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50'
                         }`}
@@ -629,6 +630,7 @@ const AlertsPage: React.FC = () => {
                     alertConfig.thresholds.map((threshold) => (
                       <div
                         key={threshold.id}
+                        role="listitem"
                         className={`rounded-lg border p-3 ${
                           threshold.enabled
                             ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50'

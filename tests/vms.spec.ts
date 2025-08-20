@@ -1,71 +1,68 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Page VMs', () => {
-  test('Chargement de la page vms et interaction avec les filtres et actions', async ({ page }) => {
+  test('should load the VMs page and display key elements', async ({ page }) => {
     await page.goto('/vms');
 
-    // Vérifier le titre de la page
     await expect(page.getByRole('heading', { name: /Virtual Machines & Containers/i })).toBeVisible();
-
-    // Vérifier la présence du bouton Refresh
     await expect(page.getByRole('button', { name: /Refresh/i })).toBeVisible();
+    
+    await page.waitForSelector('[aria-label="Status"]');
 
-    // Vérifier la présence des filtres Status, Type et Node
-    await expect(page.getByRole('combobox', { name: /All Status/i })).toBeVisible();
-    await expect(page.getByRole('combobox', { name: /All Types/i })).toBeVisible();
-    await expect(page.getByRole('combobox', { name: /All Nodes/i })).toBeVisible();
+    await expect(page.getByLabel(/Status/i)).toBeVisible();
+    await expect(page.getByLabel(/Type/i)).toBeVisible();
+    await expect(page.getByLabel(/Node/i)).toBeVisible();
+    await expect(page.getByPlaceholder('Search VMs and containers...')).toBeVisible();
+  });
 
-    // Vérifier la présence du champ de recherche
-    await expect(page.locator('input[placeholder="Search VMs and containers..."]')).toBeVisible();
+  test('should filter and search VMs', async ({ page }) => {
+    await page.goto('/vms');
 
-    // Interaction : changer le filtre Status
-    await page.selectOption('select', 'running');
-    await expect(page.locator('select')).toHaveValue('running');
+    await page.waitForSelector('[aria-label="Status"]');
 
-    // Interaction : changer le filtre Type
-    await page.selectOption('select', 'qemu');
-    await expect(page.locator('select')).toHaveValue('qemu');
+    await page.getByLabel(/Status/i).selectOption('running');
+    await expect(page.getByLabel(/Status/i)).toHaveValue('running');
 
-    // Interaction : changer le filtre Node
-    const nodeSelect = page.locator('select').nth(2);
-    await nodeSelect.selectOption({ index: 1 });
-    await expect(nodeSelect).not.toHaveValue('all');
+    await page.getByLabel(/Type/i).selectOption('qemu');
+    await expect(page.getByLabel(/Type/i)).toHaveValue('qemu');
 
-    // Interaction : taper dans le champ de recherche
-    await page.fill('input[placeholder="Search VMs and containers..."]', 'test-vm');
-    await expect(page.locator('input[placeholder="Search VMs and containers..."]')).toHaveValue('test-vm');
+    await page.getByLabel(/Node/i).selectOption({ index: 1 });
+    await expect(page.getByLabel(/Node/i)).not.toHaveValue('all');
 
-    // Interaction : cliquer sur un bouton d'action (ex: start) si visible
-    const startButton = page.locator('button[title^="Start"]').first();
-    if (await startButton.isVisible()) {
-      await startButton.click();
+    await page.getByPlaceholder('Search VMs and containers...').fill('test-vm');
+    await expect(page.getByPlaceholder('Search VMs and containers...')).toHaveValue('test-vm');
+  });
+
+  test('should perform actions on a VM', async ({ page }) => {
+    await page.goto('/vms');
+
+    const vmEntry = page.getByRole('listitem').first();
+    if (await vmEntry.isVisible()) {
+      page.on('dialog', dialog => dialog.accept());
+
+      const startButton = vmEntry.getByRole('button', { name: /Start/i });
+      if (await startButton.isVisible()) {
+        await startButton.click();
+      }
+
+      const stopButton = vmEntry.getByRole('button', { name: /Stop/i });
+      if (await stopButton.isVisible()) {
+        await stopButton.click();
+      }
+
+      const restartButton = vmEntry.getByRole('button', { name: /Restart/i });
+      if (await restartButton.isVisible()) {
+        await restartButton.click();
+      }
     }
   });
 
-  test('Actions supplémentaires sur les VMs : stop, restart et vérification des détails', async ({ page }) => {
+  test('should navigate to VM details', async ({ page }) => {
     await page.goto('/vms');
 
-    // Cliquer sur un bouton Stop si visible
-    const stopButton = page.locator('button[title^="Stop"]').first();
-    if (await stopButton.isVisible()) {
-      await stopButton.click();
-      // Vérifier qu'une confirmation est demandée et la confirmer
-      await page.evaluate(() => { window.confirm = () => true; });
-    }
-
-    // Cliquer sur un bouton Restart si visible
-    const restartButton = page.locator('button[title^="Restart"]').first();
-    if (await restartButton.isVisible()) {
-      await restartButton.click();
-      // Vérifier qu'une confirmation est demandée et la confirmer
-      await page.evaluate(() => { window.confirm = () => true; });
-    }
-
-    // Vérifier l'affichage des détails d'une VM (cliquer sur un élément de la liste)
-    const vmItem = page.locator('.vm-item').first();
-    if (await vmItem.isVisible()) {
-      await vmItem.click();
-      // Vérifier que la page de détails s'affiche avec un titre
+    const vmEntry = page.getByRole('listitem').first();
+    if (await vmEntry.isVisible()) {
+      await vmEntry.click();
       await expect(page.getByRole('heading', { name: /VM Details/i })).toBeVisible();
     }
   });

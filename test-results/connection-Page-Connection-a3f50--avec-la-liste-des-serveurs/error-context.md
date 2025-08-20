@@ -1,0 +1,63 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e5]:
+        - img [ref=e7]
+        - generic [ref=e10]:
+          - heading "Proxmox VE" [level=1] [ref=e11]
+          - paragraph [ref=e12]: Dashboard
+      - navigation [ref=e13]:
+        - button "Dashboard" [ref=e14]:
+          - img [ref=e15]
+          - generic [ref=e18]: Dashboard
+        - button "Nodes" [ref=e19]:
+          - img [ref=e20]
+          - generic [ref=e23]: Nodes
+        - button "Virtual Machines" [ref=e24]:
+          - img [ref=e25]
+          - generic [ref=e27]: Virtual Machines
+        - button "Containers" [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e34]: Containers
+        - button "Storage" [ref=e35]:
+          - img [ref=e36]
+          - generic [ref=e38]: Storage
+        - button "Network" [ref=e39]:
+          - img [ref=e40]
+          - generic [ref=e45]: Network
+        - button "Metrics" [ref=e46]:
+          - img [ref=e47]
+          - generic [ref=e49]: Metrics
+        - button "Monitoring" [ref=e50]:
+          - img [ref=e51]
+          - generic [ref=e53]: Monitoring
+        - button "Alerts 2" [ref=e54]:
+          - img [ref=e55]
+          - generic [ref=e58]: Alerts
+          - generic [ref=e59]: "2"
+        - button "Security" [ref=e60]:
+          - img [ref=e61]
+          - generic [ref=e63]: Security
+        - button "Settings" [ref=e64]:
+          - img [ref=e65]
+          - generic [ref=e68]: Settings
+      - generic [ref=e72]:
+        - paragraph [ref=e73]: Admin
+        - paragraph [ref=e74]: admin@pve
+    - main [ref=e75]:
+      - generic [ref=e76]:
+        - heading "Proxmox Servers" [level=1] [ref=e77]
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - generic [ref=e80]: Server List
+            - button "Add Server" [ref=e81]:
+              - generic [ref=e82]: Add Server
+          - list [ref=e83]:
+            - listitem [ref=e84]: Loading servers...
+  - button "Open Next.js Dev Tools" [ref=e90] [cursor=pointer]:
+    - img [ref=e91] [cursor=pointer]
+  - alert [ref=e94]
+```

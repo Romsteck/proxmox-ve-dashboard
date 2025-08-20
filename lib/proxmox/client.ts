@@ -25,37 +25,26 @@ export type VmAction = 'start' | 'stop' | 'restart' | 'pause' | 'resume' | 'shut
  * Enhanced transport-agnostic client interface with new features
  */
 export interface ProxmoxClient {
-  // Existing methods
   getClusterSummary(signal?: AbortSignal): Promise<ClusterSummary>;
   getNodeMetrics(node: string, rangeSeconds: number, signal?: AbortSignal): Promise<MetricsSeries>;
   streamEvents(init?: { headers?: IncomingHttpHeaders }): AsyncIterable<EventMessage>;
-  
-  // VM and Container management
   getVmList(signal?: AbortSignal): Promise<VmList>;
   getVmDetails(node: string, vmid: number, signal?: AbortSignal): Promise<VmResource>;
   performVmAction(node: string, vmid: number, action: VmAction, signal?: AbortSignal): Promise<{ success: boolean; message?: string }>;
-  
-  // Historical metrics
   getHistoricalMetrics(
     node: string,
     timeRange: TimeRange,
     vmid?: number,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<HistoricalMetrics>;
-  
-  // Monitoring features
   getSystemLogs(
     node: string,
     limit?: number,
     since?: Date,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<LogEntry[]>;
-  
   getBackupJobs(node?: string, signal?: AbortSignal): Promise<BackupJob[]>;
-  
   getServiceStatus(node: string, signal?: AbortSignal): Promise<ServiceStatus[]>;
-  
-  // Alert management
   getActiveAlerts(signal?: AbortSignal): Promise<Alert[]>;
   acknowledgeAlert(alertId: string, signal?: AbortSignal): Promise<{ success: boolean }>;
 }

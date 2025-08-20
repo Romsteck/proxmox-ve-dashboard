@@ -34,8 +34,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PageErrorBoundary>
-          <ConnectionProvider>
+        <ConnectionProvider>
+          <PageErrorBoundary>
             <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
               <Navigation />
               <main className="flex-1 overflow-auto">
@@ -43,8 +43,8 @@ export default function RootLayout({
               </main>
             </div>
             <ToastProvider />
-          </ConnectionProvider>
-        </PageErrorBoundary>
+          </PageErrorBoundary>
+        </ConnectionProvider>
       </body>
     </html>
   );

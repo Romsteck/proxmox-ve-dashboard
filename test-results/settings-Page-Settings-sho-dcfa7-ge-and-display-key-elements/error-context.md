@@ -1,0 +1,155 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e5]:
+        - img [ref=e7]
+        - generic [ref=e10]:
+          - heading "Proxmox VE" [level=1] [ref=e11]
+          - paragraph [ref=e12]: Dashboard
+      - navigation [ref=e13]:
+        - button "Dashboard" [ref=e14]:
+          - img [ref=e15]
+          - generic [ref=e18]: Dashboard
+        - button "Nodes" [ref=e19]:
+          - img [ref=e20]
+          - generic [ref=e23]: Nodes
+        - button "Virtual Machines" [ref=e24]:
+          - img [ref=e25]
+          - generic [ref=e27]: Virtual Machines
+        - button "Containers" [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e34]: Containers
+        - button "Storage" [ref=e35]:
+          - img [ref=e36]
+          - generic [ref=e38]: Storage
+        - button "Network" [ref=e39]:
+          - img [ref=e40]
+          - generic [ref=e45]: Network
+        - button "Metrics" [ref=e46]:
+          - img [ref=e47]
+          - generic [ref=e49]: Metrics
+        - button "Monitoring" [ref=e50]:
+          - img [ref=e51]
+          - generic [ref=e53]: Monitoring
+        - button "Alerts 2" [ref=e54]:
+          - img [ref=e55]
+          - generic [ref=e58]: Alerts
+          - generic [ref=e59]: "2"
+        - button "Security" [ref=e60]:
+          - img [ref=e61]
+          - generic [ref=e63]: Security
+        - button "Settings" [ref=e64]:
+          - img [ref=e65]
+          - generic [ref=e68]: Settings
+      - generic [ref=e72]:
+        - paragraph [ref=e73]: Admin
+        - paragraph [ref=e74]: admin@pve
+    - main [ref=e75]:
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - heading "Settings" [level=1] [ref=e80]
+            - paragraph [ref=e81]: Configure your dashboard preferences and connections
+          - button "Save Changes" [disabled] [ref=e83]:
+            - generic [ref=e84]:
+              - img [ref=e85]
+              - text: Save Changes
+        - generic [ref=e89]:
+          - generic [ref=e91]:
+            - img [ref=e92]
+            - heading "General" [level=3] [ref=e95]
+          - generic [ref=e96]:
+            - generic [ref=e97]:
+              - generic [ref=e98]:
+                - generic [ref=e99]:
+                  - img [ref=e100]
+                  - text: Theme
+                - combobox [ref=e106]:
+                  - option "Light"
+                  - option "Dark"
+                  - option "System" [selected]
+              - generic [ref=e107]:
+                - generic [ref=e108]:
+                  - img [ref=e109]
+                  - text: Language
+                - combobox [ref=e112]:
+                  - option "English" [selected]
+                  - option "Français"
+                  - option "Deutsch"
+                  - option "Español"
+              - generic [ref=e113]:
+                - generic [ref=e114]:
+                  - img [ref=e115]
+                  - text: Refresh Interval (ms)
+                - spinbutton [ref=e120]: "5000"
+              - generic [ref=e121]:
+                - generic [ref=e122]:
+                  - img [ref=e123]
+                  - text: Default Time Range
+                - combobox [ref=e126]:
+                  - option "1 Hour"
+                  - option "6 Hours"
+                  - option "24 Hours" [selected]
+                  - option "7 Days"
+                  - option "30 Days"
+            - generic [ref=e127]:
+              - generic [ref=e128]:
+                - checkbox "Enable automatic refresh" [checked] [ref=e129]
+                - generic [ref=e130]: Enable automatic refresh
+              - generic [ref=e131]:
+                - checkbox "Show notifications" [checked] [ref=e132]
+                - generic [ref=e133]: Show notifications
+              - generic [ref=e134]:
+                - checkbox "Use compact view" [ref=e135]
+                - generic [ref=e136]: Use compact view
+        - generic [ref=e137]:
+          - generic [ref=e139]:
+            - img [ref=e140]
+            - heading "Monitoring" [level=3] [ref=e142]
+          - generic [ref=e144]:
+            - generic [ref=e145]: Maximum History Points
+            - spinbutton [ref=e146]: "100"
+            - paragraph [ref=e147]: Maximum number of data points to store for historical charts
+        - generic [ref=e148]:
+          - generic [ref=e150]:
+            - img [ref=e151]
+            - heading "Alerts & Notifications" [level=3] [ref=e154]
+          - generic [ref=e155]:
+            - generic [ref=e156]:
+              - checkbox "Enable global alerts" [checked] [ref=e157]
+              - generic [ref=e158]: Enable global alerts
+            - generic [ref=e159]:
+              - heading "Notification Channels" [level=4] [ref=e160]
+              - generic [ref=e161]:
+                - checkbox "Toast notifications" [checked] [ref=e162]
+                - img [ref=e163]
+                - generic [ref=e166]: Toast notifications
+              - generic [ref=e167]:
+                - checkbox "Email notifications" [ref=e168]
+                - img [ref=e169]
+                - generic [ref=e172]: Email notifications
+              - generic [ref=e173]:
+                - checkbox "Webhook notifications" [ref=e174]
+                - img [ref=e175]
+                - generic [ref=e179]: Webhook notifications
+        - generic [ref=e180]:
+          - generic [ref=e182]:
+            - img [ref=e183]
+            - heading "Data Management" [level=3] [ref=e186]
+          - generic [ref=e188]:
+            - button "Export Settings" [ref=e189]:
+              - generic [ref=e190]:
+                - img [ref=e191]
+                - text: Export Settings
+            - generic [ref=e195] [cursor=pointer]:
+              - img [ref=e196] [cursor=pointer]
+              - text: Import Settings
+            - button "Reset to Defaults" [ref=e199]:
+              - generic [ref=e200]:
+                - img [ref=e201]
+                - text: Reset to Defaults
+  - alert [ref=e204]
+```

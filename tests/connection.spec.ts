@@ -10,8 +10,8 @@ test.describe('Page Connection', () => {
     // Vérifier la présence du bouton Add Server
     await expect(page.getByRole('button', { name: /Add Server/i })).toBeVisible();
 
-    // Vérifier la présence de la liste des serveurs (au moins le conteneur)
-    await expect(page.locator('ul')).toBeVisible();
+    // Vérifier la présence de la liste des serveurs
+    await expect(page.getByRole('list', { name: /servers/i })).toBeVisible();
 
     // Tester l'ouverture du formulaire d'ajout de serveur
     await page.getByRole('button', { name: /Add Server/i }).click();
@@ -19,17 +19,17 @@ test.describe('Page Connection', () => {
 
     // Remplir le formulaire d'ajout de serveur
     await page.getByLabel('Host').fill('test-server.local');
-    await page.getByLabel('Port').fill('9006');
+    await page.getByLabel('Port').fill('8006');
     await page.getByLabel('Username').fill('root@pam');
     await page.getByLabel('Token').fill('dummy-token');
 
     // Soumettre le formulaire
     await page.getByRole('button', { name: /Save/i }).click();
 
-    // Vérifier que le formulaire est fermé après ajout (le bouton Add Server doit être visible)
-    await expect(page.getByRole('button', { name: /Add Server/i })).toBeVisible();
+    // Vérifier que le formulaire est fermé après ajout
+    await expect(page.getByRole('heading', { name: /Add New Server/i })).not.toBeVisible();
 
     // Vérifier que le serveur ajouté apparaît dans la liste
-    await expect(page.getByText('test-server.local:9006')).toBeVisible();
+    await expect(page.getByRole('listitem').filter({ hasText: 'test-server.local' })).toBeVisible();
   });
 });

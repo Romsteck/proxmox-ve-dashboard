@@ -213,9 +213,48 @@ export function createHttpsClient(opts: HttpsClientOptions): ProxmoxClient {
     }
   }
 
+  // Mock implementations for unimplemented methods
+  const mockImpl = (name: string, data: any = {}) => {
+    console.log(`[Mock] Called ${name}`);
+    return Promise.resolve(data);
+  };
+
   return {
     getClusterSummary,
     getNodeMetrics,
     streamEvents,
+    
+    // Fulfill the rest of the ProxmoxClient interface with mock data
+    getVmList: () => mockImpl("getVmList", {
+      vms: [
+        { vmid: 100, name: "vm-100", status: "running", type: "qemu", node: "pve-1", uptime: 7200, cpu: 0.75, maxcpu: 4, mem: { used: 2048, total: 4096, free: 2048 }, disk: { used: 21474836480, total: 42949672960, free: 21474836480 } },
+        { vmid: 101, name: "ct-101", status: "stopped", type: "lxc", node: "pve-2", uptime: 0, cpu: 0, maxcpu: 2, mem: { used: 512, total: 1024, free: 512 }, disk: { used: 10737418240, total: 21474836480, free: 10737418240 } },
+      ]
+    }),
+    getVmDetails: (vmid: number) => mockImpl("getVmDetails", { vmid, status: "running", name: `vm-${vmid}`, type: "qemu", node: "pve-1", uptime: 3600, cpu: 0.5, maxcpu: 2, mem: { used: 1024, total: 2048, free: 1024 }, disk: { used: 10737418240, total: 21474836480, free: 10737418240 } }),
+    performVmAction: (vmid: number, action: string) => mockImpl("performVmAction", { vmid, action }),
+    getHistoricalMetrics: () => mockImpl("getHistoricalMetrics", {
+      node: "mock-node",
+      series: [
+        { t: Date.now() - 3600 * 1000, cpu: 0.1, memUsed: 1024, memTotal: 4096 },
+        { t: Date.now(), cpu: 0.2, memUsed: 2048, memTotal: 4096 },
+      ]
+    }),
+    getSystemLogs: () => mockImpl("getSystemLogs", [
+      { n: 1, t: "2023-10-27 10:00:00", pri: "info", msg: "System boot" },
+      { n: 2, t: "2023-10-27 10:01:00", pri: "error", msg: "Disk failure" },
+    ]),
+    getBackupJobs: () => mockImpl("getBackupJobs", [
+      { id: "backup-1", node: "pve-1", vmid: 100, starttime: Date.now() - 86400 * 1000, status: "finished", type: "full" },
+    ]),
+    getServiceStatus: () => mockImpl("getServiceStatus", [
+      { node: "pve-1", name: "pveproxy", state: "running", description: "PVE API Proxy" },
+      { node: "pve-2", name: "pvedaemon", state: "running", description: "PVE Daemon" },
+    ]),
+    getActiveAlerts: () => mockImpl("getActiveAlerts", [
+      { id: "alert-1", node: "pve-1", type: "storage", severity: "warning", message: "Low disk space on /", timestamp: Date.now() },
+      { id: "alert-2", node: "pve-2", type: "cpu", severity: "critical", message: "High CPU usage", timestamp: Date.now() },
+    ]),
+    acknowledgeAlert: (alertId: string) => mockImpl("acknowledgeAlert", { alertId }),
   };
 }

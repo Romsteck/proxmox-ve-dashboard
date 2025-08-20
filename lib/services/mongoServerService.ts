@@ -4,35 +4,43 @@ const MONGO_URI = "mongodb://mongodb.mynetwk.biz/dashboard";
 const DB_NAME = "dashboard";
 const COLLECTION_NAME = "servers";
 
-let client: MongoClient | null = null;
-let db: Db | null = null;
+class MongoServerService {
+  private client: MongoClient | null = null;
+  private db: Db | null = null;
 
-/**
- * Get the singleton MongoDB client, connecting if necessary.
- */
-async function getDb(): Promise<Db> {
-  if (db && client) {
-    return db;
+  async connect(): Promise<void> {
+    if (this.db && this.client) {
+      return;
+    }
+    try {
+      this.client = new MongoClient(MONGO_URI, {});
+      await this.client.connect();
+      this.db = this.client.db(DB_NAME);
+    } catch (error) {
+      console.error("MongoDB connection error:", error);
+      throw new Error("Failed to connect to MongoDB");
+    }
   }
-  try {
-    client = new MongoClient(MONGO_URI, { });
-    await client.connect();
-    db = client.db(DB_NAME);
-    return db;
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    throw new Error("Failed to connect to MongoDB");
-  }
-}
 
-/**
- * Fetch all documents from the "servers" collection.
- * @returns Array of server documents.
- */
-export async function getServers(): Promise<Document[]> {
-  try {
-    console.log("mongoServerService: Connecting to database...");
-    const db = await getDb();
+  async disconnect(): Promise<void> {
+    if (this.client) {
+      await this.client.close();
+      this.client = null;
+      this.db = null;
+    }
+  }
+
+  private async getDb(): Promise<Db> {
+    if (!this.db) {
+      await this.connect();
+    }
+    return this.db!;
+  }
+
+  async getServers(): Promise<Document[]> {
+    try {
+      console.log("mongoServerService: Connecting to database...");
+      const db = await this.getDb();
     const collection: Collection = db.collection(COLLECTION_NAME);
     
     // Logs détaillés pour le diagnostic
@@ -40,8 +48,8 @@ export async function getServers(): Promise<Document[]> {
       mongoUri: MONGO_URI,
       dbName: DB_NAME,
       collectionName: COLLECTION_NAME,
-      clientConnected: !!client,
-      dbInstance: !!db,
+      clientConnected: !!this.client,
+      dbInstance: !!this.db,
       timestamp: new Date().toISOString()
     });
     
@@ -93,10 +101,10 @@ export async function getServers(): Promise<Document[]> {
  * @param server The server document to insert.
  * @returns The inserted document, or null if failed.
  */
-export async function addServer(server: Document): Promise<Document | null> {
-  try {
-    console.log("mongoServerService: Connecting to database for insert...");
-    const db = await getDb();
+  async addServer(server: Document): Promise<Document | null> {
+    try {
+      console.log("mongoServerService: Connecting to database for insert...");
+      const db = await this.getDb();
     const collection: Collection = db.collection(COLLECTION_NAME);
     console.log(`mongoServerService: Adding server to collection '${COLLECTION_NAME}'`, server);
     const result: InsertOneResult<Document> = await collection.insertOne(server);
@@ -121,10 +129,10 @@ export async function addServer(server: Document): Promise<Document | null> {
  * @param updateData The data to update.
  * @returns The updated document, or null if not found/failed.
  */
-export async function updateServer(id: string, updateData: Document): Promise<Document | null> {
-  try {
-    console.log("[DEBUG updateServer] Début de la mise à jour:", {
-      id,
+  async updateServer(id: string, updateData: Document): Promise<Document | null> {
+    try {
+      console.log("[DEBUG updateServer] Début de la mise à jour:", {
+        id,
       type: typeof id,
       length: id?.length,
       isValidObjectId: id && /^[0-9a-fA-F]{24}$/.test(id),
@@ -142,7 +150,7 @@ export async function updateServer(id: string, updateData: Document): Promise<Do
       throw new Error("Aucune donnée de mise à jour fournie");
     }
 
-    const db = await getDb();
+    const db = await this.getDb();
     const collection: Collection = db.collection(COLLECTION_NAME);
 
     // Logs détaillés pour le diagnostic de connexion
@@ -150,8 +158,8 @@ export async function updateServer(id: string, updateData: Document): Promise<Do
       mongoUri: MONGO_URI,
       dbName: DB_NAME,
       collectionName: COLLECTION_NAME,
-      clientConnected: !!client,
-      dbInstance: !!db,
+      clientConnected: !!this.client,
+      dbInstance: !!this.db,
       timestamp: new Date().toISOString()
     });
 
@@ -222,10 +230,10 @@ export async function updateServer(id: string, updateData: Document): Promise<Do
  * @param id The server ID (string format).
  * @returns True if deleted, false if not found.
  */
-export async function deleteServer(id: string): Promise<boolean> {
-  try {
-    console.log("[DEBUG deleteServer] Début de la suppression:", {
-      id,
+  async deleteServer(id: string): Promise<boolean> {
+    try {
+      console.log("[DEBUG deleteServer] Début de la suppression:", {
+        id,
       type: typeof id,
       length: id?.length,
       isValidObjectId: id && /^[0-9a-fA-F]{24}$/.test(id),
@@ -237,7 +245,7 @@ export async function deleteServer(id: string): Promise<boolean> {
       throw new Error("ID du serveur manquant");
     }
 
-    const db = await getDb();
+    const db = await this.getDb();
     const collection: Collection = db.collection(COLLECTION_NAME);
 
     let objectId;
@@ -274,3 +282,28 @@ export async function deleteServer(id: string): Promise<boolean> {
     throw error;
   }
 }
+
+async clear(): Promise<void> {
+  try {
+    const db = await this.getDb();
+    const collection: Collection = db.collection(COLLECTION_NAME);
+    await collection.deleteMany({});
+  } catch (error) {
+    console.error("mongoServerService: Error clearing collection:", error);
+    throw new Error("Failed to clear collection");
+  }
+}
+
+async seed(data: Document[]): Promise<void> {
+  try {
+    const db = await this.getDb();
+    const collection: Collection = db.collection(COLLECTION_NAME);
+    await collection.insertMany(data);
+  } catch (error) {
+    console.error("mongoServerService: Error seeding data:", error);
+    throw new Error("Failed to seed data");
+  }
+}
+}
+
+export const mongoServerService = new MongoServerService();

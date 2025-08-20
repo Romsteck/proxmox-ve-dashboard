@@ -1,0 +1,173 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+      - img [ref=e8] [cursor=pointer]
+    - generic [ref=e11] [cursor=pointer]:
+      - button "Open issues overlay" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13] [cursor=pointer]:
+          - generic [ref=e14] [cursor=pointer]: "0"
+          - generic [ref=e15] [cursor=pointer]: "1"
+        - generic [ref=e16] [cursor=pointer]: Issue
+      - button "Collapse issues badge" [ref=e17] [cursor=pointer]:
+        - img [ref=e18] [cursor=pointer]
+  - generic [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e23]:
+        - img [ref=e25]
+        - generic [ref=e28]:
+          - heading "Proxmox VE" [level=1] [ref=e29]
+          - paragraph [ref=e30]: Dashboard
+      - navigation [ref=e31]:
+        - button "Dashboard" [ref=e32]:
+          - img [ref=e33]
+          - generic [ref=e36]: Dashboard
+        - button "Nodes" [ref=e37]:
+          - img [ref=e38]
+          - generic [ref=e41]: Nodes
+        - button "Virtual Machines" [ref=e42]:
+          - img [ref=e43]
+          - generic [ref=e45]: Virtual Machines
+        - button "Containers" [ref=e46]:
+          - img [ref=e47]
+          - generic [ref=e52]: Containers
+        - button "Storage" [ref=e53]:
+          - img [ref=e54]
+          - generic [ref=e56]: Storage
+        - button "Network" [ref=e57]:
+          - img [ref=e58]
+          - generic [ref=e63]: Network
+        - button "Metrics" [ref=e64]:
+          - img [ref=e65]
+          - generic [ref=e67]: Metrics
+        - button "Monitoring" [ref=e68]:
+          - img [ref=e69]
+          - generic [ref=e71]: Monitoring
+        - button "Alerts 2" [ref=e72]:
+          - img [ref=e73]
+          - generic [ref=e76]: Alerts
+          - generic [ref=e77]: "2"
+        - button "Security" [ref=e78]:
+          - img [ref=e79]
+          - generic [ref=e81]: Security
+        - button "Settings" [ref=e82]:
+          - img [ref=e83]
+          - generic [ref=e86]: Settings
+      - generic [ref=e90]:
+        - paragraph [ref=e91]: Admin
+        - paragraph [ref=e92]: admin@pve
+    - main [ref=e93]:
+      - generic [ref=e95]:
+        - generic [ref=e96]:
+          - generic [ref=e97]:
+            - heading "Advanced Metrics" [level=1] [ref=e98]
+            - paragraph [ref=e99]: Historical performance data and trends
+          - generic [ref=e100]:
+            - button "Export CSV" [ref=e101]:
+              - generic [ref=e102]:
+                - img [ref=e103]
+                - text: Export CSV
+            - button "Refresh" [ref=e106]:
+              - generic [ref=e107]:
+                - img [ref=e108]
+                - text: Refresh
+        - generic [ref=e114]:
+          - generic [ref=e115]:
+            - generic [ref=e117]:
+              - img [ref=e118]
+              - heading "Time Range" [level=3] [ref=e120]
+            - generic [ref=e122]:
+              - generic [ref=e123] [cursor=pointer]:
+                - radio "1 Hour Last hour with 1-minute intervals" [ref=e124]
+                - generic [ref=e125] [cursor=pointer]:
+                  - generic [ref=e126] [cursor=pointer]: 1 Hour
+                  - generic [ref=e127] [cursor=pointer]: Last hour with 1-minute intervals
+              - generic [ref=e128] [cursor=pointer]:
+                - radio "6 Hours Last 6 hours with 5-minute intervals" [ref=e129]
+                - generic [ref=e130] [cursor=pointer]:
+                  - generic [ref=e131] [cursor=pointer]: 6 Hours
+                  - generic [ref=e132] [cursor=pointer]: Last 6 hours with 5-minute intervals
+              - generic [ref=e133] [cursor=pointer]:
+                - radio "24 Hours Last 24 hours with 15-minute intervals" [checked] [ref=e134]
+                - generic [ref=e135] [cursor=pointer]:
+                  - generic [ref=e136] [cursor=pointer]: 24 Hours
+                  - generic [ref=e137] [cursor=pointer]: Last 24 hours with 15-minute intervals
+              - generic [ref=e138] [cursor=pointer]:
+                - radio "7 Days Last 7 days with 1-hour intervals" [ref=e139]
+                - generic [ref=e140] [cursor=pointer]:
+                  - generic [ref=e141] [cursor=pointer]: 7 Days
+                  - generic [ref=e142] [cursor=pointer]: Last 7 days with 1-hour intervals
+              - generic [ref=e143] [cursor=pointer]:
+                - radio "30 Days Last 30 days with 6-hour intervals" [ref=e144]
+                - generic [ref=e145] [cursor=pointer]:
+                  - generic [ref=e146] [cursor=pointer]: 30 Days
+                  - generic [ref=e147] [cursor=pointer]: Last 30 days with 6-hour intervals
+          - generic [ref=e148]:
+            - generic [ref=e150]:
+              - img [ref=e151]
+              - heading "Nodes" [level=3] [ref=e153]
+            - generic [ref=e155]:
+              - generic [ref=e156] [cursor=pointer]:
+                - checkbox "pve-1" [checked] [ref=e157]
+                - generic [ref=e158] [cursor=pointer]: pve-1
+              - generic [ref=e159] [cursor=pointer]:
+                - checkbox "pve-2" [ref=e160]
+                - generic [ref=e161] [cursor=pointer]: pve-2
+              - generic [ref=e162] [cursor=pointer]:
+                - checkbox "pve-3" [ref=e163]
+                - generic [ref=e164] [cursor=pointer]: pve-3
+          - generic [ref=e165]:
+            - generic [ref=e167]:
+              - img [ref=e168]
+              - heading "Metrics" [level=3] [ref=e171]
+            - generic [ref=e173]:
+              - generic [ref=e174] [cursor=pointer]:
+                - checkbox "CPU Usage" [checked] [ref=e175]
+                - img [ref=e176] [cursor=pointer]
+                - generic [ref=e179] [cursor=pointer]: CPU Usage
+              - generic [ref=e180] [cursor=pointer]:
+                - checkbox "Memory Usage" [checked] [ref=e181]
+                - img [ref=e182] [cursor=pointer]
+                - generic [ref=e184] [cursor=pointer]: Memory Usage
+              - generic [ref=e185] [cursor=pointer]:
+                - checkbox "Storage Usage" [ref=e186]
+                - img [ref=e187] [cursor=pointer]
+                - generic [ref=e189] [cursor=pointer]: Storage Usage
+              - generic [ref=e190] [cursor=pointer]:
+                - checkbox "Network I/O" [ref=e191]
+                - img [ref=e192] [cursor=pointer]
+                - generic [ref=e197] [cursor=pointer]: Network I/O
+        - generic [ref=e198]:
+          - generic [ref=e199]:
+            - generic [ref=e201]:
+              - img [ref=e202]
+              - heading "CPU Usage" [level=3] [ref=e205]
+            - generic [ref=e207]:
+              - generic [ref=e208]:
+                - generic [ref=e209]: 0.0%
+                - img [ref=e210]
+              - generic [ref=e211]: "Avg: 0.0%"
+          - generic [ref=e212]:
+            - generic [ref=e214]:
+              - img [ref=e215]
+              - heading "Memory Usage" [level=3] [ref=e217]
+            - generic [ref=e219]:
+              - generic [ref=e220]:
+                - generic [ref=e221]: 0.0%
+                - img [ref=e222]
+              - generic [ref=e223]: "Avg: 0.0%"
+        - generic [ref=e224]:
+          - generic [ref=e225]:
+            - generic [ref=e227]:
+              - img [ref=e228]
+              - heading "CPU Usage - 24 Hours" [level=3] [ref=e231]
+            - generic [ref=e234]: Loading chart data...
+          - generic [ref=e235]:
+            - generic [ref=e237]:
+              - img [ref=e238]
+              - heading "Memory Usage - 24 Hours" [level=3] [ref=e240]
+            - generic [ref=e243]: Loading chart data...
+  - alert [ref=e244]
+```

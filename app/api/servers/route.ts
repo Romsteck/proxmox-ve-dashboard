@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServers, addServer, updateServer, deleteServer } from '@/lib/services/mongoServerService';
+import { mongoServerService } from '@/lib/services/mongoServerService';
 
 // GET /api/servers - List all servers
 export async function GET(req: NextRequest) {
   try {
-    const servers = await getServers();
+    const servers = await mongoServerService.getServers();
     return NextResponse.json({ servers }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-    const newServer = await addServer(data);
+    const newServer = await mongoServerService.addServer(data);
     return NextResponse.json({ server: newServer }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

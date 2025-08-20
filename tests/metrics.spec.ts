@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Page Metrics', () => {
-  test('Chargement de la page metrics et interaction avec les contrôles', async ({ page }) => {
+  test('should load the metrics page and display key elements', async ({ page }) => {
     await page.goto('/metrics');
 
     // Vérifier le titre de la page
@@ -11,21 +11,27 @@ test.describe('Page Metrics', () => {
     await expect(page.getByRole('button', { name: /Export CSV/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Refresh/i })).toBeVisible();
 
-    // Vérifier la présence des sélecteurs Time Range, Nodes et Metrics
-    await expect(page.getByRole('radio', { name: /1 Hour/i })).toBeVisible();
-    await expect(page.getByRole('checkbox', { name: /pve-1/i })).toBeVisible();
-    await expect(page.getByRole('checkbox', { name: /CPU Usage/i })).toBeVisible();
+    // Vérifier la présence des sélecteurs
+    await expect(page.getByLabel(/Time Range/i)).toBeVisible();
+    await expect(page.getByLabel(/Nodes/i)).toBeVisible();
+    await expect(page.getByLabel(/Metrics/i)).toBeVisible();
+  });
 
-    // Interaction : changer le Time Range
-    await page.getByRole('radio', { name: /6 Hours/i }).check();
-    await expect(page.getByRole('radio', { name: /6 Hours/i })).toBeChecked();
+  test('should interact with time range selector', async ({ page }) => {
+    await page.goto('/metrics');
+    await page.getByLabel('6 Hours').check();
+    await expect(page.getByLabel('6 Hours')).toBeChecked();
+  });
 
-    // Interaction : cocher/décocher un node
-    await page.getByRole('checkbox', { name: /pve-2/i }).check();
-    await expect(page.getByRole('checkbox', { name: /pve-2/i })).toBeChecked();
+  test('should interact with nodes selector', async ({ page }) => {
+    await page.goto('/metrics');
+    await page.getByLabel('pve-2').check();
+    await expect(page.getByLabel('pve-2')).toBeChecked();
+  });
 
-    // Interaction : cocher/décocher un metric
-    await page.getByRole('checkbox', { name: /Storage Usage/i }).check();
-    await expect(page.getByRole('checkbox', { name: /Storage Usage/i })).toBeChecked();
+  test('should interact with metrics selector', async ({ page }) => {
+    await page.goto('/metrics');
+    await page.getByLabel('Storage Usage').check();
+    await expect(page.getByLabel('Storage Usage')).toBeChecked();
   });
 });

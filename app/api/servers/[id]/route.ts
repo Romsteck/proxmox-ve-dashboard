@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateServer, deleteServer } from '@/lib/services/mongoServerService';
+import { mongoServerService } from '@/lib/services/mongoServerService';
 
 /**
  * DELETE /api/servers/[id] - Supprime un serveur par ID
@@ -23,7 +23,7 @@ export async function DELETE(
     }
 
     console.log('[DEBUG ROUTE] Appel de deleteServer avec:', { id });
-    const deleted = await deleteServer(id);
+    const deleted = await mongoServerService.deleteServer(id);
 
     console.log('[DEBUG ROUTE] Résultat de deleteServer:', { deleted });
 
@@ -82,7 +82,7 @@ export async function PUT(
     }
 
     console.log('[DEBUG ROUTE] Appel de updateServer avec:', { id, updateData });
-    const updatedServer = await updateServer(id, updateData);
+    const updatedServer = await mongoServerService.updateServer(id, updateData);
 
     console.log('[DEBUG ROUTE] Résultat de updateServer:', {
       updatedServer: !!updatedServer,
@@ -109,7 +109,7 @@ export async function PUT(
 }
 
     console.log('[DEBUG ROUTE] Appel de deleteServer avec:', { id });
-    const deleted = await deleteServer(id);
+    const deleted = await mongoServerService.deleteServer(id);
 
     console.log('[DEBUG ROUTE] Résultat de deleteServer:', { deleted });
 
@@ -168,7 +168,7 @@ export async function PUT(
     }
 
     console.log('[DEBUG ROUTE] Appel de updateServer avec:', { id, updateData });
-    const updatedServer = await updateServer(id, updateData);
+    const updatedServer = await mongoServerService.updateServer(id, updateData);
 
     console.log('[DEBUG ROUTE] Résultat de updateServer:', {
       updatedServer: !!updatedServer,

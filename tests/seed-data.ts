@@ -1,0 +1,60 @@
+export const seedData = {
+  servers: [
+    {
+      id: '1',
+      name: 'Test Server 1',
+      host: 'localhost',
+      port: 8006,
+      username: 'root',
+      password: 'password',
+    },
+    {
+      id: '2',
+      name: 'Test Server 2',
+      host: 'localhost',
+      port: 8007,
+      username: 'root',
+      password: 'password',
+    },
+  ],
+  alerts: [
+    {
+      id: '1',
+      server_id: '1',
+      metric: 'cpu',
+      threshold: 80,
+      operator: '>',
+      severity: 'critical',
+      created_at: new Date(),
+    },
+    {
+      id: '2',
+      server_id: '1',
+      metric: 'memory',
+      threshold: 90,
+      operator: '>',
+      severity: 'warning',
+      created_at: new Date(),
+    },
+  ],
+  vms: [
+    {
+      id: '100',
+      server_id: '1',
+      name: 'vm1',
+      status: 'running',
+      cpu: 0.5,
+      memory: 1024,
+      disk: 20480,
+    },
+    {
+      id: '101',
+      server_id: '1',
+      name: 'vm2',
+      status: 'stopped',
+      cpu: 0.2,
+      memory: 512,
+      disk: 10240,
+    },
+  ],
+};

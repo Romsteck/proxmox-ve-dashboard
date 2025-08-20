@@ -1,0 +1,82 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+      - img [ref=e8] [cursor=pointer]
+    - generic [ref=e11] [cursor=pointer]:
+      - button "Open issues overlay" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13] [cursor=pointer]:
+          - generic [ref=e14] [cursor=pointer]: "0"
+          - generic [ref=e15] [cursor=pointer]: "1"
+        - generic [ref=e16] [cursor=pointer]: Issue
+      - button "Collapse issues badge" [ref=e17] [cursor=pointer]:
+        - img [ref=e18] [cursor=pointer]
+  - generic [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e23]:
+        - img [ref=e25]
+        - generic [ref=e28]:
+          - heading "Proxmox VE" [level=1] [ref=e29]
+          - paragraph [ref=e30]: Dashboard
+      - navigation [ref=e31]:
+        - button "Dashboard" [ref=e32]:
+          - img [ref=e33]
+          - generic [ref=e36]: Dashboard
+        - button "Nodes" [ref=e37]:
+          - img [ref=e38]
+          - generic [ref=e41]: Nodes
+        - button "Virtual Machines" [ref=e42]:
+          - img [ref=e43]
+          - generic [ref=e45]: Virtual Machines
+        - button "Containers" [ref=e46]:
+          - img [ref=e47]
+          - generic [ref=e52]: Containers
+        - button "Storage" [ref=e53]:
+          - img [ref=e54]
+          - generic [ref=e56]: Storage
+        - button "Network" [ref=e57]:
+          - img [ref=e58]
+          - generic [ref=e63]: Network
+        - button "Metrics" [ref=e64]:
+          - img [ref=e65]
+          - generic [ref=e67]: Metrics
+        - button "Monitoring" [ref=e68]:
+          - img [ref=e69]
+          - generic [ref=e71]: Monitoring
+        - button "Alerts 2" [ref=e72]:
+          - img [ref=e73]
+          - generic [ref=e76]: Alerts
+          - generic [ref=e77]: "2"
+        - button "Security" [ref=e78]:
+          - img [ref=e79]
+          - generic [ref=e81]: Security
+        - button "Settings" [ref=e82]:
+          - img [ref=e83]
+          - generic [ref=e86]: Settings
+      - generic [ref=e90]:
+        - paragraph [ref=e91]: Admin
+        - paragraph [ref=e92]: admin@pve
+    - main [ref=e93]:
+      - main [ref=e94]:
+        - heading "Welcome to Proxmox VE Dashboard" [level=1] [ref=e95]
+        - generic [ref=e96]:
+          - link "Virtual Machines Manage and monitor your VMs and containers." [ref=e97] [cursor=pointer]:
+            - /url: /vms
+            - heading "Virtual Machines" [level=2] [ref=e98] [cursor=pointer]
+            - paragraph [ref=e99] [cursor=pointer]: Manage and monitor your VMs and containers.
+          - link "Monitoring View real-time metrics and logs for your nodes." [ref=e100] [cursor=pointer]:
+            - /url: /monitoring
+            - heading "Monitoring" [level=2] [ref=e101] [cursor=pointer]
+            - paragraph [ref=e102] [cursor=pointer]: View real-time metrics and logs for your nodes.
+          - link "Alerts Configure and view alerts for your cluster." [ref=e103] [cursor=pointer]:
+            - /url: /alerts
+            - heading "Alerts" [level=2] [ref=e104] [cursor=pointer]
+            - paragraph [ref=e105] [cursor=pointer]: Configure and view alerts for your cluster.
+          - link "Settings Customize your dashboard settings." [ref=e106] [cursor=pointer]:
+            - /url: /settings
+            - heading "Settings" [level=2] [ref=e107] [cursor=pointer]
+            - paragraph [ref=e108] [cursor=pointer]: Customize your dashboard settings.
+  - alert [ref=e109]
+```

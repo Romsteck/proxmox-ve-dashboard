@@ -345,29 +345,58 @@ export function createMockClient(): ProxmoxClient {
   async function getActiveAlerts(): Promise<Alert[]> {
     await new Promise((r) => setTimeout(r, 90));
     
-    const alerts: Alert[] = [];
     const now = new Date();
-    
-    // Generate some mock alerts
-    for (let i = 0; i < 3; i++) {
-      const r = seededRandom(i);
-      const node = NODES[Math.floor(r() * NODES.length)];
-      
-      alerts.push({
-        id: `alert-${i}`,
-        thresholdId: `threshold-${i}`,
-        message: i === 0 ? `High CPU usage on ${node}` :
-                i === 1 ? `Memory usage critical on ${node}` :
-                `Storage space low on ${node}`,
-        severity: i === 0 ? 'warning' : i === 1 ? 'critical' : 'warning',
-        timestamp: new Date(now.getTime() - Math.floor(r() * 3600000)),
-        node,
-        vmid: r() > 0.5 ? Math.floor(100 + r() * 50) : undefined,
-        acknowledged: r() > 0.7,
-        acknowledgedBy: r() > 0.7 ? 'admin' : undefined,
-        acknowledgedAt: r() > 0.7 ? new Date(now.getTime() - Math.floor(r() * 1800000)) : undefined,
-      });
-    }
+    const alerts: Alert[] = [
+      {
+        id: 'alert-1',
+        thresholdId: 'threshold-cpu',
+        message: 'High CPU usage on pve-1',
+        severity: 'warning',
+        timestamp: new Date(now.getTime() - 3600000),
+        node: 'pve-1',
+        acknowledged: false,
+      },
+      {
+        id: 'alert-2',
+        thresholdId: 'threshold-disk',
+        message: 'Critical disk space on pve-2',
+        severity: 'critical',
+        timestamp: new Date(now.getTime() - 7200000),
+        node: 'pve-2',
+        vmid: 101,
+        acknowledged: false,
+      },
+      {
+        id: 'alert-3',
+        thresholdId: 'threshold-mem',
+        message: 'Memory usage high on pve-3',
+        severity: 'warning',
+        timestamp: new Date(now.getTime() - 10800000),
+        node: 'pve-3',
+        acknowledged: true,
+        acknowledgedBy: 'admin',
+        acknowledgedAt: new Date(now.getTime() - 1800000),
+      },
+      {
+        id: 'alert-4',
+        thresholdId: 'threshold-load',
+        message: 'High load average on pve-1',
+        severity: 'info',
+        timestamp: new Date(now.getTime() - 14400000),
+        node: 'pve-1',
+        acknowledged: false,
+      },
+      {
+        id: 'alert-5',
+        thresholdId: 'threshold-io',
+        message: 'Disk I/O delay on pve-2',
+        severity: 'error',
+        timestamp: new Date(now.getTime() - 18000000),
+        node: 'pve-2',
+        vmid: 102,
+        acknowledged: false,
+      },
+    ];
     
     return alerts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }

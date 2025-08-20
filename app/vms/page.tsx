@@ -255,9 +255,6 @@ const VmsPage: React.FC = () => {
         {/* Header */}
         <header className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              Virtual Machines & Containers
-            </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Manage your VMs and LXC containers
             </p>

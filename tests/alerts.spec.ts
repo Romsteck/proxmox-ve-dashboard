@@ -18,41 +18,46 @@ test.describe('Page Alerts', () => {
     await expect(page.getByRole('heading', { name: /Alert Thresholds/i })).toBeVisible();
 
     // Vérifier la présence du champ de recherche
-    await expect(page.locator('input[placeholder="Search alerts..."]')).toBeVisible();
+    await expect(page.getByPlaceholder('Search alerts...')).toBeVisible();
 
     // Vérifier la présence du filtre de sévérité
-    await expect(page.locator('select')).toBeVisible();
+    await expect(page.getByRole('combobox')).toBeVisible();
   });
 
   test('Interaction avec la recherche et le filtre de sévérité', async ({ page }) => {
     await page.goto('/alerts');
 
+    // Wait for the page to be stable
+    await expect(page.getByRole('heading', { name: /Active Alerts/i })).toBeVisible();
+
     // Taper dans le champ de recherche
-    const searchInput = page.locator('input[placeholder="Search alerts..."]');
+    const searchInput = page.getByPlaceholder('Search alerts...');
     await searchInput.fill('disk');
     await expect(searchInput).toHaveValue('disk');
 
     // Sélectionner une sévérité dans le filtre
-    const severitySelect = page.locator('select');
+    const severitySelect = page.getByRole('combobox');
     await severitySelect.selectOption('critical');
     await expect(severitySelect).toHaveValue('critical');
 
-    // Vérifier que les alertes affichées correspondent au filtre (exemple basique)
-    const alerts = page.locator('.alert-item');
-    await expect(alerts).toHaveCountGreaterThan(0);
-    for (let i = 0; i < await alerts.count(); i++) {
-      const alertText = await alerts.nth(i).textContent();
-      expect(alertText?.toLowerCase()).toContain('disk');
+    // Vérifier que les alertes affichées correspondent au filtre
+    const alerts = page.getByRole('listitem');
+    await expect(alerts).not.toHaveCount(0);
+    for (const alert of await alerts.all()) {
+      await expect(alert).toHaveText(/disk/i);
     }
   });
 
   test('Ajout et suppression d\'un seuil d\'alerte', async ({ page }) => {
     await page.goto('/alerts');
 
+    // Wait for the page to be stable
+    await expect(page.getByRole('heading', { name: /Alert Thresholds/i })).toBeVisible();
+
     // Cliquer sur Add Threshold
     await page.getByRole('button', { name: /Add Threshold/i }).click();
 
-    // Remplir le formulaire d'ajout de seuil (exemple)
+    // Remplir le formulaire d'ajout de seuil
     await page.getByLabel('Name').fill('Test Threshold');
     await page.getByLabel('Metric').selectOption('cpu');
     await page.getByLabel('Severity').selectOption('warning');
@@ -62,13 +67,12 @@ test.describe('Page Alerts', () => {
     await page.getByRole('button', { name: /Save/i }).click();
 
     // Vérifier que le seuil ajouté apparaît dans la liste
-    await expect(page.getByText('Test Threshold')).toBeVisible();
+    const newThreshold = page.getByRole('listitem').filter({ hasText: 'Test Threshold' });
+    await expect(newThreshold).toBeVisible();
 
     // Supprimer le seuil ajouté
-    await page.getByRole('button', { name: /Delete Test Threshold/i }).click();
-
-    // Confirmer la suppression (simuler confirm)
-    await page.evaluate(() => { window.confirm = () => true; });
+    page.on('dialog', dialog => dialog.accept());
+    await newThreshold.getByRole('button', { name: /Delete/i }).click();
 
     // Vérifier que le seuil n'est plus visible
     await expect(page.getByText('Test Threshold')).not.toBeVisible();
