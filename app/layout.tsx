@@ -4,6 +4,7 @@ import "./globals.css";
 import Navigation from "@/components/Navigation";
 import ToastProvider from "@/components/ui/Toast";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
+import { ConnectionProvider } from "@/lib/contexts/ConnectionContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,13 +35,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <PageErrorBoundary>
-          <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
-            <Navigation />
-            <main className="flex-1 overflow-auto">
-              {children}
-            </main>
-          </div>
-          <ToastProvider />
+          <ConnectionProvider>
+            <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+              <Navigation />
+              <main className="flex-1 overflow-auto">
+                {children}
+              </main>
+            </div>
+            <ToastProvider />
+          </ConnectionProvider>
         </PageErrorBoundary>
       </body>
     </html>

@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { useConnection, useConnectionForm } from '@/hooks/useConnection';
-import { ConnectionProvider } from '@/lib/contexts/ConnectionContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -287,23 +287,34 @@ function ConnectionStatus() {
 
 // Composant principal de test
 function ConnectionTestContent() {
-  const { isConnected, isConnecting, hasValidConfig, status, error } = require('@/hooks/useConnection').useConnection();
+  const router = useRouter();
+  const { isConnected, isConnecting, hasValidConfig, status, error, connect } = useConnection();
 
   console.log('[ConnectionTest] Render - isConnected:', isConnected, 'isConnecting:', isConnecting, 'hasValidConfig:', hasValidConfig, 'status:', status, 'error:', error);
+
+  // Handle successful connection - redirect to dashboard
+  React.useEffect(() => {
+    if (isConnected) {
+      router.push('/');
+    }
+  }, [isConnected, router]);
 
   // Si pas de config valide ou erreur, afficher uniquement le formulaire
   if (!hasValidConfig || status === 'error' || !isConnected) {
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Connexion Proxmox requise
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Connexion Proxmox VE
         </h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Configurez votre connexion au serveur Proxmox VE pour accéder au tableau de bord.
+        </p>
         <div className="grid grid-cols-1 gap-6">
           <ConnectionForm />
         </div>
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-4">
-            <span className="text-red-800 text-sm">{error}</span>
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-4 dark:bg-red-900/20 dark:border-red-800">
+            <span className="text-red-800 text-sm dark:text-red-300">{error}</span>
           </div>
         )}
       </div>
@@ -313,8 +324,8 @@ function ConnectionTestContent() {
   // Sinon, afficher le statut de connexion
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">
-        Test du Système de Connexion Proxmox
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        Connexion Proxmox VE
       </h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ConnectionForm />
@@ -324,13 +335,9 @@ function ConnectionTestContent() {
   );
 }
 
-// Composant avec Provider
+// Composant principal - plus besoin de provider car il est dans le layout
 export function ConnectionTest() {
-  return (
-    <ConnectionProvider>
-      <ConnectionTestContent />
-    </ConnectionProvider>
-  );
+  return <ConnectionTestContent />;
 }
 
 export default ConnectionTest;

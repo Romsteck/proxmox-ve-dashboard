@@ -35,6 +35,10 @@ interface ConnectionContextType {
   connect: (config: ConnectionConfig) => Promise<boolean>;
   disconnect: () => void;
   clearError: () => void;
+
+  // Multi-serveur actions
+  addConnection: (id: string, config: ConnectionConfig) => void;
+  setActiveServer: (id: string | null) => void;
   
   // Utilitaires
   isConnected: boolean;
@@ -42,42 +46,65 @@ interface ConnectionContextType {
   hasValidConfig: boolean;
 }
 
-// État initial
-const initialState: ConnectionState = {
-  status: 'disconnected',
-  config: null,
-  lastConnected: null,
-  error: null,
-  isValidating: false,
+// État multi-serveurs
+interface MultiConnectionState {
+  connections: Record<string, ConnectionState>; // keyed by serverId
+  activeServerId: string | null;
+}
+
+const initialState: MultiConnectionState = {
+  connections: {},
+  activeServerId: null,
 };
 
-// Reducer pour gérer l'état de connexion
-function connectionReducer(state: ConnectionState, action: ConnectionAction): ConnectionState {
+// Nouveau reducer multi-serveurs
+type MultiConnectionAction =
+  | { type: 'ADD_CONNECTION'; payload: { id: string; config: ConnectionConfig } }
+  | { type: 'REMOVE_CONNECTION'; payload: { id: string } }
+  | { type: 'SET_ACTIVE_SERVER'; payload: string | null }
+  | { type: 'UPDATE_CONNECTION'; payload: { id: string; updates: Partial<ConnectionState> } };
+
+function connectionReducer(state: MultiConnectionState, action: MultiConnectionAction): MultiConnectionState {
   switch (action.type) {
-    case 'SET_STATUS':
-      return { ...state, status: action.payload };
-    
-    case 'SET_CONFIG':
-      return { ...state, config: action.payload };
-    
-    case 'SET_ERROR':
-      return { ...state, error: action.payload };
-    
-    case 'SET_VALIDATING':
-      return { ...state, isValidating: action.payload };
-    
-    case 'SET_LAST_CONNECTED':
-      return { ...state, lastConnected: action.payload };
-    
-    case 'RESET_CONNECTION':
+    case 'ADD_CONNECTION': {
+      const { id, config } = action.payload;
       return {
-        ...initialState,
-        config: state.config, // Conserver la config
+        ...state,
+        connections: {
+          ...state.connections,
+          [id]: {
+            status: 'disconnected',
+            config,
+            lastConnected: null,
+            error: null,
+            isValidating: false,
+          },
+        },
       };
-    
-    case 'UPDATE_STATE':
-      return { ...state, ...action.payload };
-    
+    }
+    case 'REMOVE_CONNECTION': {
+      const { id } = action.payload;
+      const newConnections = { ...state.connections };
+      delete newConnections[id];
+      return {
+        ...state,
+        connections: newConnections,
+        activeServerId: state.activeServerId === id ? null : state.activeServerId,
+      };
+    }
+    case 'SET_ACTIVE_SERVER': {
+      return { ...state, activeServerId: action.payload };
+    }
+    case 'UPDATE_CONNECTION': {
+      const { id, updates } = action.payload;
+      return {
+        ...state,
+        connections: {
+          ...state.connections,
+          [id]: { ...state.connections[id], ...updates },
+        },
+      };
+    }
     default:
       return state;
   }
@@ -97,81 +124,75 @@ interface ConnectionProviderProps {
 export function ConnectionProvider({ children }: ConnectionProviderProps) {
   const [state, dispatch] = useReducer(connectionReducer, initialState);
 
-  // Charger la configuration depuis localStorage au démarrage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const config = JSON.parse(stored);
-        try {
-          const validatedConfig = validateConnectionConfig(config);
-          dispatch({ type: 'SET_CONFIG', payload: validatedConfig });
-        } catch (validationError) {
-          console.warn('Invalid stored connection config:', validationError);
-          localStorage.removeItem(STORAGE_KEY);
-          dispatch({ type: 'SET_CONFIG', payload: null });
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to load connection config from localStorage:', error);
-      localStorage.removeItem(STORAGE_KEY);
-    }
+  // Helper pour obtenir la connexion active
+  const getActiveConnection = useCallback((): ConnectionState | null => {
+    if (!state.activeServerId) return null;
+    return state.connections[state.activeServerId] || null;
+  }, [state]);
+
+  // Ajouter une connexion
+  const addConnection = useCallback((id: string, config: ConnectionConfig) => {
+    dispatch({ type: 'ADD_CONNECTION', payload: { id, config } });
   }, []);
 
-  // Sauvegarder la configuration dans localStorage
-  const saveConfigToStorage = useCallback((config: ConnectionConfig | null) => {
-    try {
-      if (config) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    } catch (error) {
-      console.warn('Failed to save connection config to localStorage:', error);
-    }
+  // Supprimer une connexion
+  const removeConnection = useCallback((id: string) => {
+    dispatch({ type: 'REMOVE_CONNECTION', payload: { id } });
   }, []);
 
-  // Définir la configuration de connexion
+  // Définir le serveur actif
+  const setActiveServer = useCallback((id: string | null) => {
+    dispatch({ type: 'SET_ACTIVE_SERVER', payload: id });
+  }, []);
+
+  // Mettre à jour la configuration de la connexion active
   const setConnectionConfig = useCallback((config: ConnectionConfig | null) => {
-    dispatch({ type: 'SET_CONFIG', payload: config });
-    saveConfigToStorage(config);
-    
-    // Réinitialiser l'état si on supprime la config
-    if (!config) {
-      dispatch({ type: 'RESET_CONNECTION' });
-    }
-  }, [saveConfigToStorage]);
+    if (!state.activeServerId) return;
+    dispatch({
+      type: 'UPDATE_CONNECTION',
+      payload: { id: state.activeServerId, updates: { config } },
+    });
+  }, [state.activeServerId]);
 
-  // Tester la connexion
+  // Tester la connexion de la connexion active
   const testConnection = useCallback(async (config?: ConnectionConfig): Promise<ConnectionTestResult> => {
-    const configToTest = config || state.config;
-    
-    if (!configToTest) {
+    const active = getActiveConnection();
+    const configToTest = config || active?.config;
+
+    if (!configToTest || !state.activeServerId) {
       return {
         success: false,
         error: {
           type: 'validation',
-          message: 'No connection configuration provided',
+          message: 'No active connection configuration provided',
           timestamp: new Date(),
         },
       };
     }
 
-    dispatch({ type: 'SET_VALIDATING', payload: true });
-    dispatch({ type: 'SET_ERROR', payload: null });
+    dispatch({
+      type: 'UPDATE_CONNECTION',
+      payload: { id: state.activeServerId, updates: { isValidating: true, error: null } },
+    });
 
     try {
       const result = await ConnectionService.testConnectionWithRetry(configToTest);
-      
+
       if (!result.success && result.error) {
-        dispatch({ type: 'SET_ERROR', payload: result.error.message });
+        dispatch({
+          type: 'UPDATE_CONNECTION',
+          payload: { id: state.activeServerId, updates: { error: result.error.message } },
+        });
       }
-      
+
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error during connection test';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
-      
+      dispatch({
+        type: 'UPDATE_CONNECTION',
+        payload: { id: state.activeServerId, updates: { error: errorMessage } },
+      });
+
       return {
         success: false,
         error: {
@@ -181,90 +202,135 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
         },
       };
     } finally {
-      dispatch({ type: 'SET_VALIDATING', payload: false });
+      dispatch({
+        type: 'UPDATE_CONNECTION',
+        payload: { id: state.activeServerId, updates: { isValidating: false } },
+      });
     }
-  }, [state.config]);
+  }, [getActiveConnection, state.activeServerId]);
 
   // Se connecter
   const connect = useCallback(async (config: ConnectionConfig): Promise<boolean> => {
-    dispatch({ type: 'SET_STATUS', payload: 'connecting' });
-    dispatch({ type: 'SET_ERROR', payload: null });
+    if (!state.activeServerId) return false;
+
+    dispatch({
+      type: 'UPDATE_CONNECTION',
+      payload: { id: state.activeServerId, updates: { status: 'connecting', error: null } },
+    });
 
     try {
-      // Valider la configuration
       const validatedConfig = validateConnectionConfig(config);
-      
-      // Tester la connexion avant de sauvegarder
       const result = await testConnection(validatedConfig);
 
       if (result.success) {
-        // Sauvegarder la configuration seulement si la connexion réussit
-        setConnectionConfig(validatedConfig);
-        dispatch({ type: 'SET_STATUS', payload: 'connected' });
-        dispatch({ type: 'SET_LAST_CONNECTED', payload: new Date() });
+        dispatch({
+          type: 'UPDATE_CONNECTION',
+          payload: {
+            id: state.activeServerId,
+            updates: { config: validatedConfig, status: 'connected', lastConnected: new Date() },
+          },
+        });
         return true;
       } else {
-        dispatch({ type: 'SET_STATUS', payload: 'error' });
-        if (result.error) {
-          dispatch({ type: 'SET_ERROR', payload: result.error.message });
-        }
+        dispatch({
+          type: 'UPDATE_CONNECTION',
+          payload: {
+            id: state.activeServerId,
+            updates: { status: 'error', error: result.error?.message || 'Connection failed' },
+          },
+        });
         return false;
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Connection failed';
-      dispatch({ type: 'SET_STATUS', payload: 'error' });
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      dispatch({
+        type: 'UPDATE_CONNECTION',
+        payload: { id: state.activeServerId, updates: { status: 'error', error: errorMessage } },
+      });
       return false;
     }
-  }, [setConnectionConfig, testConnection]);
+  }, [state.activeServerId, testConnection]);
 
   // Se déconnecter
   const disconnect = useCallback(() => {
-    dispatch({ type: 'SET_STATUS', payload: 'disconnected' });
-    dispatch({ type: 'SET_ERROR', payload: null });
-  }, []);
+    if (!state.activeServerId) return;
+    dispatch({
+      type: 'UPDATE_CONNECTION',
+      payload: { id: state.activeServerId, updates: { status: 'disconnected', error: null } },
+    });
+  }, [state.activeServerId]);
 
   // Effacer l'erreur
   const clearError = useCallback(() => {
-    dispatch({ type: 'SET_ERROR', payload: null });
-  }, []);
+    if (!state.activeServerId) return;
+    dispatch({
+      type: 'UPDATE_CONNECTION',
+      payload: { id: state.activeServerId, updates: { error: null } },
+    });
+  }, [state.activeServerId]);
 
   // Valeurs calculées
-  const isConnected = state.status === 'connected';
-  const isConnecting = state.status === 'connecting' || state.isValidating;
-  const hasValidConfig = state.config !== null && ConnectionService.isConfigurationComplete(state.config);
+  const active = getActiveConnection();
+  const isConnected = active?.status === 'connected';
+  const isConnecting = active?.status === 'connecting' || active?.isValidating;
+  const hasValidConfig = !!active?.config && ConnectionService.isConfigurationComplete(active.config);
 
   // Vérification périodique de la connexion (heartbeat)
   useEffect(() => {
-    if (!isConnected || !state.config) {
-      console.log('[ConnectionContext] Heartbeat: skipped (isConnected:', isConnected, ', config:', state.config, ')');
+    if (!isConnected || !active?.config || !state.activeServerId) {
       return;
     }
 
-    console.log('[ConnectionContext] Heartbeat: started (isConnected:', isConnected, ', config:', state.config, ')');
     const interval = setInterval(async () => {
       try {
-        console.log('[ConnectionContext] Heartbeat: testing connection...');
-        const result = await ConnectionService.testConnection(state.config!);
+        const result = await ConnectionService.testConnection(active.config!);
         if (!result.success) {
-          console.log('[ConnectionContext] Heartbeat: connection lost', result.error);
-          dispatch({ type: 'SET_STATUS', payload: 'error' });
-          if (result.error) {
-            dispatch({ type: 'SET_ERROR', payload: `Connection lost: ${result.error.message}` });
+          if (state.activeServerId) {
+            dispatch({
+              type: 'UPDATE_CONNECTION',
+              payload: {
+                id: state.activeServerId,
+                updates: { status: 'error', error: `Connection lost: ${result.error?.message}` },
+              },
+            });
           }
         }
       } catch (err) {
-        console.log('[ConnectionContext] Heartbeat: error', err);
-        dispatch({ type: 'SET_STATUS', payload: 'error' });
-        dispatch({ type: 'SET_ERROR', payload: 'Connection heartbeat failed' });
+        if (state.activeServerId) {
+          dispatch({
+            type: 'UPDATE_CONNECTION',
+            payload: {
+              id: state.activeServerId,
+              updates: { status: 'error', error: 'Connection heartbeat failed' },
+            },
+          });
+        }
       }
-    }, 30000); // Vérifier toutes les 30 secondes
+    }, 30000);
 
     return () => clearInterval(interval);
-  }, [isConnected, state.config]);
+  }, [isConnected, active?.config, state.activeServerId]);
 
-  const contextValue: ConnectionContextType = {
-    state,
+  const contextValue = React.useMemo(() => ({
+    state: getActiveConnection() || {
+      status: 'disconnected',
+      config: null,
+      lastConnected: null,
+      error: null,
+      isValidating: false,
+    },
+    setConnectionConfig,
+    testConnection,
+    connect,
+    disconnect,
+    clearError,
+    isConnected,
+    isConnecting: isConnecting ?? false,
+    hasValidConfig,
+    addConnection,
+    setActiveServer,
+  }), [
+    getActiveConnection,
     setConnectionConfig,
     testConnection,
     connect,
@@ -273,7 +339,9 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
     isConnected,
     isConnecting,
     hasValidConfig,
-  };
+    addConnection,
+    setActiveServer,
+  ]);
 
   return (
     <ConnectionContext.Provider value={contextValue}>
@@ -289,6 +357,27 @@ export function useConnectionContext(): ConnectionContextType {
     throw new Error('useConnectionContext must be used within a ConnectionProvider');
   }
   return context;
+}
+
+// Hook pour gérer les connexions multiples
+export function useMultiConnection() {
+  const context = useContext(ConnectionContext);
+  if (context === undefined) {
+    throw new Error('useMultiConnection must be used within a ConnectionProvider');
+  }
+  
+  // Accéder aux propriétés multi-serveurs du contexte
+  const state = context.state as any;
+  const multiState = state as MultiConnectionState;
+  
+  return {
+    connections: multiState.connections || {},
+    activeServerId: multiState.activeServerId,
+    activeConnection: multiState.activeServerId ? multiState.connections[multiState.activeServerId] : null,
+    addConnection: (context as any).addConnection,
+    removeConnection: (context as any).removeConnection,
+    setActiveServer: (context as any).setActiveServer,
+  };
 }
 
 // Export du contexte pour les tests

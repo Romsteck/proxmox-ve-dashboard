@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { redirect, useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Card, { CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Chart from "@/components/ui/Chart";
@@ -10,6 +11,7 @@ import { SectionErrorBoundary } from "@/components/ErrorBoundary";
 import { useEventSource } from "@/hooks/useEventSource";
 import { useDashboardData } from "@/hooks/useProxmoxData";
 import { useUserPreferences } from "@/hooks/useLocalStorage";
+import { useConnectionContext } from "@/lib/contexts/ConnectionContext";
 import { useDebouncedCallback, usePerformanceMonitor } from "@/lib/utils/performance";
 import { API_ENDPOINTS, UI_CONFIG } from "@/lib/constants";
 import { NodeSummary as NodeSummaryType, ClusterSummary as ClusterSummaryType } from "@/lib/types";
@@ -25,6 +27,8 @@ import {
   Clock,
   TrendingUp,
   HardDrive,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 
 // Use imported types instead of local definitions
@@ -102,7 +106,86 @@ const mockActivityEvents: ActivityEvent[] = [
   },
 ];
 
+// Connection status component
+const ConnectionStatus = React.memo(() => {
+  const router = useRouter();
+  const { isConnected, isConnecting, state } = useConnectionContext();
+
+  const handleGoToConnection = useCallback(() => {
+    router.push('/connection');
+  }, [router]);
+
+  if (isConnecting) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin">
+                <Icon icon={RefreshCw} size="lg" className="text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="text-center">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Connecting to Proxmox VE
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Please wait while we establish the connection...
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center gap-4">
+              <Icon icon={WifiOff} size="lg" className="text-red-600 dark:text-red-400" />
+              <div className="text-center">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  No Connection to Proxmox VE
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {state.error || "Please configure your connection to access the dashboard."}
+                </p>
+              </div>
+              <Button onClick={handleGoToConnection} className="w-full">
+                <Icon icon={Wifi} size="sm" className="mr-2" />
+                Configure Connection
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return null;
+});
+
+ConnectionStatus.displayName = 'ConnectionStatus';
+
 const Dashboard = React.memo(() => {
+  // Connection context
+  const { isConnected } = useConnectionContext();
+  const router = useRouter();
+
+  // 🚀 Ensure redirect to /connection when disconnected
+  useEffect(() => {
+    if (!isConnected) {
+      router.push("/connection");
+    }
+  }, [isConnected, router]);
+
+  if (!isConnected) {
+    return null; // prevent rendering while redirecting
+  }
+
   // Performance monitoring
   const performanceMetrics = usePerformanceMonitor('Dashboard');
   
@@ -115,7 +198,14 @@ const Dashboard = React.memo(() => {
   // Track manual refresh state
   const [isManualRefresh, setIsManualRefresh] = useState(false);
 
-  // Use optimized dashboard data hook
+  // Redirect to connection page if not connected
+  useEffect(() => {
+    if (!isConnected) {
+      router.push('/connection');
+    }
+  }, [isConnected, router]);
+
+  // Use optimized dashboard data hook - only enabled when connected
   const {
     clusterSummary: summary,
     loading,
@@ -123,7 +213,7 @@ const Dashboard = React.memo(() => {
     refetch,
     isStale,
   } = useDashboardData({
-    enabled: true,
+    enabled: isConnected,
     onSuccess: (data) => {
       // ✅ Only show success toast for manual refreshes, not automatic polling
       if (isManualRefresh) {
@@ -145,9 +235,9 @@ const Dashboard = React.memo(() => {
     refetch();
   }, [refetch]);
 
-  // Enhanced SSE connection with better error handling
+  // Enhanced SSE connection with better error handling - only enabled when connected
   const sseConnection = useEventSource(API_ENDPOINTS.EVENTS, {
-    enabled: true,
+    enabled: isConnected,
     maxRetries: 5,
     onConnect: () => {
       console.log('SSE connected');

@@ -261,7 +261,8 @@ export function useConnectionStatus() {
  * Hook pour les formulaires de configuration de connexion
  */
 export function useConnectionForm(initialConfig?: Partial<ConnectionConfig>) {
-  const { setConfig, validateConfig, testConnection } = useConnection();
+  const connection = useConnection();
+  const context = useConnectionContext();
   const [formData, setFormData] = useState<Partial<ConnectionConfig>>(
     initialConfig || {
       host: '',
@@ -284,10 +285,10 @@ export function useConnectionForm(initialConfig?: Partial<ConnectionConfig>) {
 
   // Valider le formulaire
   const validate = useCallback(() => {
-    const validation = validateConfig(formData);
+    const validation = connection.validateConfig(formData);
     setValidationErrors(validation.errors);
     return validation.isValid;
-  }, [formData, validateConfig]);
+  }, [formData, connection.validateConfig]);
 
   // Tester la configuration
   const testConfig = useCallback(async () => {
@@ -297,22 +298,28 @@ export function useConnectionForm(initialConfig?: Partial<ConnectionConfig>) {
 
     setIsTesting(true);
     try {
-      const result = await testConnection(formData as ConnectionConfig);
+      const result = await connection.testConnection(formData as ConnectionConfig);
       setTestResult(result);
       return result;
     } finally {
       setIsTesting(false);
     }
-  }, [validate, testConnection, formData]);
+  }, [validate, connection.testConnection, formData]);
 
   // Sauvegarder la configuration
   const saveConfig = useCallback(() => {
     if (validate()) {
-      setConfig(formData as ConnectionConfig);
+      const config = formData as ConnectionConfig;
+      const id = ConnectionService.generateConfigKey(config);
+      if (typeof context.addConnection === 'function' && typeof context.setActiveServer === 'function') {
+        context.addConnection(id, config);
+        context.setActiveServer(id);
+      }
+      connection.setConfig(config);
       return true;
     }
     return false;
-  }, [validate, setConfig, formData]);
+  }, [validate, formData, context, connection]);
 
   return {
     formData,

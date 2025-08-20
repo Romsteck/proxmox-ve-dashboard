@@ -6,12 +6,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { withRetry, createContextualError } from '@/lib/utils/error-handling';
 import { cachedFetch, CacheKeys } from '@/lib/utils/cache';
 import { API_ENDPOINTS, TIMEOUTS, INTERVALS } from '@/lib/constants';
-import { 
-  ClusterSummary, 
+import {
+  ClusterSummary,
   safeValidateClusterSummary,
   safeValidateApiResponse,
-  ApiResponse 
+  ApiResponse
 } from '@/lib/types';
+import { useConnectionContext } from '@/lib/contexts/ConnectionContext';
 
 export interface UseProxmoxDataOptions {
   enabled?: boolean;
@@ -47,6 +48,9 @@ function useProxmoxQuery<T>(
     onError,
   } = options;
 
+  // Check connection status
+  const { isConnected } = useConnectionContext();
+
   const [state, setState] = useState<ProxmoxDataState<T>>({
     data: null,
     loading: false,
@@ -56,7 +60,7 @@ function useProxmoxQuery<T>(
   });
 
   const fetchData = useCallback(async (isRefetch = false) => {
-    if (!enabled) return;
+    if (!enabled || !isConnected) return;
 
     setState(prev => ({
       ...prev,
@@ -101,21 +105,21 @@ function useProxmoxQuery<T>(
 
   // Initial fetch
   useEffect(() => {
-    if (enabled) {
+    if (enabled && isConnected) {
       fetchData();
     }
-  }, [enabled, fetchData]);
+  }, [enabled, isConnected, fetchData]);
 
   // Polling interval
   useEffect(() => {
-    if (!enabled || !refetchInterval) return;
+    if (!enabled || !refetchInterval || !isConnected) return;
 
     const interval = setInterval(() => {
       fetchData(true);
     }, refetchInterval);
 
     return () => clearInterval(interval);
-  }, [enabled, refetchInterval, fetchData]);
+  }, [enabled, refetchInterval, isConnected, fetchData]);
 
   return {
     ...state,
@@ -160,10 +164,13 @@ export function useClusterSummary(options: UseProxmoxDataOptions = {}) {
     return dataValidation.data;
   }, []);
 
+  const { isConnected } = useConnectionContext();
+
   return useProxmoxQuery(
     CacheKeys.clusterSummary(),
     fetcher,
     {
+      enabled: isConnected && (options.enabled !== false),
       refetchInterval: INTERVALS.METRICS_POLL,
       ...options,
     }
@@ -205,11 +212,13 @@ export function useNodeMetrics(node: string, rangeSeconds: number = 3600, option
     return apiResponse.data;
   }, [node, rangeSeconds]);
 
+  const { isConnected } = useConnectionContext();
+
   return useProxmoxQuery(
     CacheKeys.nodeMetrics(node, rangeSeconds),
     fetcher,
     {
-      enabled: Boolean(node),
+      enabled: isConnected && Boolean(node) && (options.enabled !== false),
       refetchInterval: INTERVALS.METRICS_POLL,
       ...options,
     }
