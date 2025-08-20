@@ -263,10 +263,19 @@ export default function ConnectionPage() {
   }
 
   // Connect/disconnect
+  // Fonction pour gérer la connexion à un serveur Proxmox
+  // Cette fonction met à jour l'état d'erreur de connexion, définit le serveur actif,
+  // puis tente d'établir la connexion via le contexte de connexion.
+  // En cas d'échec, elle capture l'erreur et met à jour l'état d'erreur pour affichage.
   async function handleConnect(id: string, config: ConnectionConfig) {
-    setConnectError(null);
-    setActiveServer(id);
-    // connect will be called in useEffect after activeServerId update
+    setConnectError(null); // Réinitialise l'erreur de connexion avant de tenter la connexion
+    setActiveServer(id); // Définit le serveur sélectionné comme actif
+    try {
+      await connect(config); // Tente la connexion avec la configuration fournie
+    } catch (error) {
+      // En cas d'erreur, met à jour l'état avec le message d'erreur approprié
+      setConnectError(error instanceof Error ? error.message : 'Connection failed');
+    }
   }
   function handleDisconnect() {
     disconnect();
@@ -309,6 +318,7 @@ export default function ConnectionPage() {
                   User: {server.username}
                 </div>
                 <div className="flex gap-2 mt-2">
+                  {/* Bouton pour se connecter au serveur sélectionné */}
                   <Button
                     onClick={() => handleConnect(server._id || `${server.host}:${server.port}`, server)}
                     disabled={isConnecting && activeServerId === (server._id || `${server.host}:${server.port}`)}
