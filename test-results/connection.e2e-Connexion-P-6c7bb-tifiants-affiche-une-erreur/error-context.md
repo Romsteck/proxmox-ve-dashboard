@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - generic [ref=e2]:
     - generic [ref=e3]:
       - generic [ref=e4]:
@@ -57,10 +57,10 @@
         - generic [ref=e87]:
           - generic [ref=e88]:
             - generic [ref=e89]: Adresse du serveur
-            - 'textbox "ex: proxmox.local" [ref=e90]'
+            - 'textbox "ex: proxmox.local" [ref=e90]': fakehost
           - generic [ref=e91]:
             - generic [ref=e92]: Port
-            - spinbutton [ref=e93]: "8006"
+            - spinbutton [active] [ref=e93]: "8006"
           - generic [ref=e94]:
             - generic [ref=e95]: Nom d'utilisateur
             - textbox [ref=e96]
@@ -74,5 +74,5 @@
             - generic [ref=e104]: Se connecter
   - button "Open Next.js Dev Tools" [ref=e110] [cursor=pointer]:
     - img [ref=e111] [cursor=pointer]
-  - alert [ref=e114]: Connexion
+  - alert [ref=e114]
 ```

@@ -5,6 +5,7 @@ import Navigation from "@/components/Navigation";
 import ToastProvider from "@/components/ui/Toast";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
 import { ConnectionProvider } from "@/lib/contexts/ConnectionContext";
+import ClientRootGuard from "@/components/ClientRootGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,7 +22,11 @@ export const metadata: Metadata = {
   description: "Modern dashboard for monitoring Proxmox VE infrastructure",
   keywords: ["proxmox", "dashboard", "monitoring", "virtualization"],
   authors: [{ name: "Proxmox Dashboard Team" }],
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -36,13 +41,15 @@ export default function RootLayout({
       >
         <ConnectionProvider>
           <PageErrorBoundary>
-            <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
-              <Navigation />
-              <main className="flex-1 overflow-auto">
-                {children}
-              </main>
-            </div>
-            <ToastProvider />
+            <ClientRootGuard>
+              <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+                <Navigation />
+                <main className="flex-1 overflow-auto">
+                  {children}
+                </main>
+              </div>
+              <ToastProvider />
+            </ClientRootGuard>
           </PageErrorBoundary>
         </ConnectionProvider>
       </body>

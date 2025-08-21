@@ -195,11 +195,13 @@ const SettingsPage: React.FC = () => {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="theme-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Icon icon={Palette} size="sm" className="inline mr-2" />
                     Theme
                   </label>
                   <select
+                    id="theme-select"
+                    aria-label="Theme"
                     value={tempSettings.theme}
                     onChange={(e) => handleChange('theme', e.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -211,11 +213,13 @@ const SettingsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="language-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Icon icon={Globe} size="sm" className="inline mr-2" />
                     Language
                   </label>
                   <select
+                    id="language-select"
+                    aria-label="Language"
                     value={tempSettings.language}
                     onChange={(e) => handleChange('language', e.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -265,7 +269,9 @@ const SettingsPage: React.FC = () => {
               <div className="space-y-4">
                 <label className="flex items-center gap-3">
                   <input
+                    id="auto-refresh-checkbox"
                     type="checkbox"
+                    aria-label="Enable automatic refresh"
                     checked={tempSettings.autoRefresh}
                     onChange={(e) => handleChange('autoRefresh', e.target.checked)}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"

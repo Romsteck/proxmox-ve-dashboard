@@ -355,6 +355,7 @@ const VmsPage: React.FC = () => {
           
           <div className="flex items-center gap-2">
             <select
+              aria-label="Status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as VmStatus | 'all')}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -367,6 +368,7 @@ const VmsPage: React.FC = () => {
             </select>
             
             <select
+              aria-label="Type"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as VmType | 'all')}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -377,6 +379,7 @@ const VmsPage: React.FC = () => {
             </select>
             
             <select
+              aria-label="Node"
               value={nodeFilter}
               onChange={(e) => setNodeFilter(e.target.value)}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"

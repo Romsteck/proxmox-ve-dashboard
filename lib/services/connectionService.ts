@@ -13,33 +13,19 @@ export class ConnectionService {
   private static readonly DEFAULT_TIMEOUT = 10000; // 10 secondes
   private static readonly TEST_ENDPOINT = '/api/proxmox/version';
 
-  /**
-   * Teste la connexion au serveur Proxmox
-   */
   static async testConnection(config: ConnectionConfig): Promise<ConnectionTestResult> {
     const startTime = Date.now();
     
     try {
-      // Valider la configuration
       const validatedConfig = validateConnectionConfig(config);
-      
-      // Construire l'URL de test (via route proxy interne pour éviter CORS)
-      // Proxmox API sur 8006 est TOUJOURS en HTTPS, même si on veut ignorer le certificat
       const protocol = 'https';
       const testUrl = `${this.TEST_ENDPOINT}?host=${encodeURIComponent(validatedConfig.host)}&port=${encodeURIComponent(String(validatedConfig.port))}&protocol=${encodeURIComponent(protocol)}&verifyTLS=${encodeURIComponent(String(!validatedConfig.insecureTLS))}`;
-
-      // Créer les headers d'authentification
-      // Note: le test de version ne nécessite pas d'auth côté Proxmox.
-      // Nous n'envoyons pas le token à l'API externe. La route proxy ne s'en sert pas.
       const headers = new Headers({
         'Content-Type': 'application/json',
       });
-      // Ajouter le token d'API si présent (certains Proxmox protègent /version)
       if (validatedConfig.token) {
         headers.set('Authorization', `PVEAPIToken=${validatedConfig.username}=${validatedConfig.token}`);
       }
-
-      // Effectuer la requête de test
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.DEFAULT_TIMEOUT);
 
@@ -48,7 +34,6 @@ export class ConnectionService {
           method: 'GET',
           headers,
           signal: controller.signal,
-          // Désactiver le cache pour s'assurer d'un test en temps réel
           cache: 'no-store',
         });
 
@@ -72,7 +57,6 @@ export class ConnectionService {
           };
         }
 
-        // Tenter de parser la réponse pour obtenir les informations du serveur
         let serverInfo;
         try {
           const data = await response.json();
@@ -106,7 +90,6 @@ export class ConnectionService {
             };
           }
 
-          // Erreurs de réseau (CORS, DNS, etc.)
           return {
             success: false,
             responseTime,
@@ -132,7 +115,7 @@ export class ConnectionService {
         success: false,
         error: this.createConnectionError(
           'validation',
-          validationError instanceof Error 
+          validationError instanceof Error
             ? `Configuration validation failed: ${validationError.message}`
             : 'Invalid configuration'
         ),
@@ -140,11 +123,8 @@ export class ConnectionService {
     }
   }
 
-  /**
-   * Teste la connexion avec retry automatique
-   */
   static async testConnectionWithRetry(
-    config: ConnectionConfig, 
+    config: ConnectionConfig,
     maxRetries: number = 3,
     retryDelay: number = 1000
   ): Promise<ConnectionTestResult> {
@@ -157,23 +137,18 @@ export class ConnectionService {
         return lastResult;
       }
 
-      // Ne pas retry sur les erreurs d'authentification ou de validation
       if (lastResult.error?.type === 'authentication' || lastResult.error?.type === 'validation') {
         return lastResult;
       }
 
-      // Attendre avant le prochain essai (sauf pour le dernier)
       if (attempt < maxRetries) {
-        await this.delay(retryDelay * attempt); // Délai progressif
+        await this.delay(retryDelay * attempt);
       }
     }
 
     return lastResult!;
   }
 
-  /**
-   * Valide les paramètres de connexion sans effectuer de requête réseau
-   */
   static validateConnectionParams(config: Partial<ConnectionConfig>): {
     isValid: boolean;
     errors: string[];
@@ -183,7 +158,6 @@ export class ConnectionService {
     if (!config.host || config.host.trim() === '') {
       errors.push('Host is required');
     } else {
-      // Validation basique du format d'hôte
       const hostRegex = /^[a-zA-Z0-9.-]+$/;
       if (!hostRegex.test(config.host.trim())) {
         errors.push('Invalid host format');
@@ -208,17 +182,11 @@ export class ConnectionService {
     };
   }
 
-  /**
-   * Construit une URL de base à partir de la configuration
-   */
   static buildBaseUrl(config: ConnectionConfig): string {
     const protocol = config.insecureTLS ? 'http' : 'https';
     return `${protocol}://${config.host}:${config.port}`;
   }
 
-  /**
-   * Vérifie si une configuration est complète
-   */
   static isConfigurationComplete(config: Partial<ConnectionConfig>): config is ConnectionConfig {
     return !!(
       config.host &&
@@ -229,9 +197,6 @@ export class ConnectionService {
     );
   }
 
-  /**
-   * Crée un objet d'erreur de connexion standardisé
-   */
   private static createConnectionError(
     type: ConnectionError['type'],
     message: string,
@@ -245,16 +210,10 @@ export class ConnectionService {
     };
   }
 
-  /**
-   * Utilitaire pour créer un délai
-   */
   private static delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Nettoie et normalise une configuration de connexion
-   */
   static sanitizeConfig(config: Partial<ConnectionConfig>): Partial<ConnectionConfig> {
     return {
       host: config.host?.trim(),
@@ -265,17 +224,9 @@ export class ConnectionService {
     };
   }
 
-  /**
-   * Génère une clé unique pour identifier une configuration
-   */
   static generateConfigKey(config: ConnectionConfig): string {
     return `${config.host}:${config.port}:${config.username}`;
   }
-  /**
-   * Supprime un serveur via l’API
-   * @param id Identifiant du serveur à supprimer
-   * @throws Error si la requête échoue (HTTP >= 400)
-   */
   static async deleteServer(id: string): Promise<void> {
     const response = await fetch('/api/servers', {
       method: 'DELETE',
@@ -290,13 +241,6 @@ export class ConnectionService {
     }
   }
 
-  /**
-   * Met à jour un serveur via l'API avec gestion d'erreur améliorée
-   * @param id Identifiant du serveur à mettre à jour
-   * @param data Nouvelles données du serveur
-   * @returns Le serveur mis à jour
-   * @throws Error si la requête échoue (HTTP >= 400)
-   */
   static async updateServer(id: string, data: object): Promise<any> {
     console.log("[DEBUG updateServer] Envoi de la requête PUT:", {
       id,
@@ -335,14 +279,12 @@ export class ConnectionService {
             errorMessage = errorDetails;
           }
         } catch {
-          // Si on ne peut pas parser le JSON, utiliser le texte brut
           try {
             errorDetails = await response.text();
             if (errorDetails) {
               errorMessage = errorDetails;
             }
           } catch {
-            // Garder le message HTTP par défaut
           }
         }
         
@@ -355,7 +297,6 @@ export class ConnectionService {
           timestamp: new Date().toISOString()
         });
         
-        // Messages d'erreur plus informatifs selon le code de statut
         if (response.status === 404) {
           throw new Error(`Erreur mise à jour serveur (HTTP ${response.status}): ${errorMessage}`);
         } else if (response.status === 400) {
@@ -376,13 +317,11 @@ export class ConnectionService {
       return result;
       
     } catch (error) {
-      // Gestion des erreurs réseau ou autres erreurs non-HTTP
       if (error instanceof TypeError && error.message.includes('fetch')) {
         console.error("[DEBUG updateServer] Erreur réseau:", error.message);
         throw new Error(`Erreur de connexion réseau: ${error.message}`);
       }
       
-      // Re-lancer l'erreur si c'est déjà une erreur HTTP formatée
       throw error;
     }
   }

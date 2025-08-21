@@ -15,6 +15,7 @@ import {
   Shield,
   Network,
 } from "lucide-react";
+import ConnectionStatusIndicator from "@/components/ConnectionStatusIndicator";
 
 const Navigation: React.FC = () => {
   const router = useRouter();
@@ -110,11 +111,16 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <Sidebar
-      items={navigationItems}
-      onItemClick={handleItemClick}
-      collapsed={collapsed}
-    />
+    <div className="flex flex-col h-full">
+      <Sidebar
+        items={navigationItems}
+        onItemClick={handleItemClick}
+        collapsed={collapsed}
+      />
+      <div className="p-2 mt-auto">
+        <ConnectionStatusIndicator />
+      </div>
+    </div>
   );
 };
 

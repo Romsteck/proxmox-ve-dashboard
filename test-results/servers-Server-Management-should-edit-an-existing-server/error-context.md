@@ -2,71 +2,77 @@
 
 ```yaml
 - generic [active] [ref=e1]:
-  - generic [ref=e6] [cursor=pointer]:
-    - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
-      - img [ref=e8] [cursor=pointer]
-    - generic [ref=e11] [cursor=pointer]:
-      - button "Open issues overlay" [ref=e12] [cursor=pointer]:
-        - generic [ref=e13] [cursor=pointer]:
-          - generic [ref=e14] [cursor=pointer]: "0"
-          - generic [ref=e15] [cursor=pointer]: "1"
-        - generic [ref=e16] [cursor=pointer]: Issue
-      - button "Collapse issues badge" [ref=e17] [cursor=pointer]:
-        - img [ref=e18] [cursor=pointer]
-  - generic [ref=e20]:
-    - generic [ref=e21]:
-      - generic [ref=e23]:
-        - img [ref=e25]
-        - generic [ref=e28]:
-          - heading "Proxmox VE" [level=1] [ref=e29]
-          - paragraph [ref=e30]: Dashboard
-      - navigation [ref=e31]:
-        - button "Dashboard" [ref=e32]:
-          - img [ref=e33]
-          - generic [ref=e36]: Dashboard
-        - button "Nodes" [ref=e37]:
-          - img [ref=e38]
-          - generic [ref=e41]: Nodes
-        - button "Virtual Machines" [ref=e42]:
-          - img [ref=e43]
-          - generic [ref=e45]: Virtual Machines
-        - button "Containers" [ref=e46]:
-          - img [ref=e47]
-          - generic [ref=e52]: Containers
-        - button "Storage" [ref=e53]:
-          - img [ref=e54]
-          - generic [ref=e56]: Storage
-        - button "Network" [ref=e57]:
-          - img [ref=e58]
-          - generic [ref=e63]: Network
-        - button "Metrics" [ref=e64]:
-          - img [ref=e65]
-          - generic [ref=e67]: Metrics
-        - button "Monitoring" [ref=e68]:
-          - img [ref=e69]
-          - generic [ref=e71]: Monitoring
-        - button "Alerts 2" [ref=e72]:
-          - img [ref=e73]
-          - generic [ref=e76]: Alerts
-          - generic [ref=e77]: "2"
-        - button "Security" [ref=e78]:
-          - img [ref=e79]
-          - generic [ref=e81]: Security
-        - button "Settings" [ref=e82]:
-          - img [ref=e83]
-          - generic [ref=e86]: Settings
-      - generic [ref=e90]:
-        - paragraph [ref=e91]: Admin
-        - paragraph [ref=e92]: admin@pve
-    - main [ref=e93]:
-      - generic [ref=e94]:
-        - heading "Proxmox Servers" [level=1] [ref=e95]
-        - generic [ref=e96]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e6]:
+          - img [ref=e8]
+          - generic [ref=e11]:
+            - heading "Proxmox VE" [level=1] [ref=e12]
+            - paragraph [ref=e13]: Dashboard
+        - navigation [ref=e14]:
+          - button "Dashboard" [ref=e15]:
+            - img [ref=e16]
+            - generic [ref=e19]: Dashboard
+          - button "Nodes" [ref=e20]:
+            - img [ref=e21]
+            - generic [ref=e24]: Nodes
+          - button "Virtual Machines" [ref=e25]:
+            - img [ref=e26]
+            - generic [ref=e28]: Virtual Machines
+          - button "Containers" [ref=e29]:
+            - img [ref=e30]
+            - generic [ref=e35]: Containers
+          - button "Storage" [ref=e36]:
+            - img [ref=e37]
+            - generic [ref=e39]: Storage
+          - button "Network" [ref=e40]:
+            - img [ref=e41]
+            - generic [ref=e46]: Network
+          - button "Metrics" [ref=e47]:
+            - img [ref=e48]
+            - generic [ref=e50]: Metrics
+          - button "Monitoring" [ref=e51]:
+            - img [ref=e52]
+            - generic [ref=e54]: Monitoring
+          - button "Alerts 2" [ref=e55]:
+            - img [ref=e56]
+            - generic [ref=e59]: Alerts
+            - generic [ref=e60]: "2"
+          - button "Security" [ref=e61]:
+            - img [ref=e62]
+            - generic [ref=e64]: Security
+          - button "Settings" [ref=e65]:
+            - img [ref=e66]
+            - generic [ref=e69]: Settings
+        - generic [ref=e73]:
+          - paragraph [ref=e74]: Admin
+          - paragraph [ref=e75]: admin@pve
+      - generic "Déconnecté" [ref=e77]:
+        - img [ref=e78]
+        - generic [ref=e82]: Déconnecté
+    - main [ref=e83]:
+      - generic [ref=e85]:
+        - heading "Connexion au serveur Proxmox" [level=1] [ref=e86]
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]: Adresse du serveur
+            - 'textbox "ex: proxmox.local" [ref=e90]'
+          - generic [ref=e91]:
+            - generic [ref=e92]: Port
+            - spinbutton [ref=e93]: "8006"
+          - generic [ref=e94]:
+            - generic [ref=e95]: Nom d'utilisateur
+            - textbox [ref=e96]
           - generic [ref=e97]:
-            - generic [ref=e98]: Server List
-            - button "Add Server" [ref=e99]:
-              - generic [ref=e100]: Add Server
-          - list [ref=e101]:
-            - listitem [ref=e102]: Loading servers...
-  - alert [ref=e103]
+            - generic [ref=e98]: Token API
+            - textbox [ref=e99]
+          - generic [ref=e100]:
+            - checkbox "Autoriser TLS non sécurisé" [ref=e101]
+            - generic [ref=e102]: Autoriser TLS non sécurisé
+          - button "Se connecter" [ref=e103]:
+            - generic [ref=e104]: Se connecter
+  - button "Open Next.js Dev Tools" [ref=e110] [cursor=pointer]:
+    - img [ref=e111] [cursor=pointer]
+  - alert [ref=e114]
 ```

@@ -52,27 +52,26 @@
         - img [ref=e78]
         - generic [ref=e82]: Déconnecté
     - main [ref=e83]:
-      - generic [ref=e85]:
-        - heading "Connexion au serveur Proxmox" [level=1] [ref=e86]
-        - generic [ref=e87]:
-          - generic [ref=e88]:
-            - generic [ref=e89]: Adresse du serveur
-            - 'textbox "ex: proxmox.local" [ref=e90]'
-          - generic [ref=e91]:
-            - generic [ref=e92]: Port
-            - spinbutton [ref=e93]: "8006"
-          - generic [ref=e94]:
-            - generic [ref=e95]: Nom d'utilisateur
-            - textbox [ref=e96]
-          - generic [ref=e97]:
-            - generic [ref=e98]: Token API
-            - textbox [ref=e99]
-          - generic [ref=e100]:
-            - checkbox "Autoriser TLS non sécurisé" [ref=e101]
-            - generic [ref=e102]: Autoriser TLS non sécurisé
-          - button "Se connecter" [ref=e103]:
-            - generic [ref=e104]: Se connecter
-  - button "Open Next.js Dev Tools" [ref=e110] [cursor=pointer]:
-    - img [ref=e111] [cursor=pointer]
-  - alert [ref=e114]: Connexion
+      - main [ref=e84]:
+        - heading "Welcome to Proxmox VE Dashboard" [level=1] [ref=e85]
+        - generic [ref=e86]:
+          - link "Virtual Machines Manage and monitor your VMs and containers." [ref=e87] [cursor=pointer]:
+            - /url: /vms
+            - heading "Virtual Machines" [level=2] [ref=e88] [cursor=pointer]
+            - paragraph [ref=e89] [cursor=pointer]: Manage and monitor your VMs and containers.
+          - link "Monitoring View real-time metrics and logs for your nodes." [ref=e90] [cursor=pointer]:
+            - /url: /monitoring
+            - heading "Monitoring" [level=2] [ref=e91] [cursor=pointer]
+            - paragraph [ref=e92] [cursor=pointer]: View real-time metrics and logs for your nodes.
+          - link "Alerts Configure and view alerts for your cluster." [ref=e93] [cursor=pointer]:
+            - /url: /alerts
+            - heading "Alerts" [level=2] [ref=e94] [cursor=pointer]
+            - paragraph [ref=e95] [cursor=pointer]: Configure and view alerts for your cluster.
+          - link "Settings Customize your dashboard settings." [ref=e96] [cursor=pointer]:
+            - /url: /settings
+            - heading "Settings" [level=2] [ref=e97] [cursor=pointer]
+            - paragraph [ref=e98] [cursor=pointer]: Customize your dashboard settings.
+  - button "Open Next.js Dev Tools" [ref=e104] [cursor=pointer]:
+    - img [ref=e105] [cursor=pointer]
+  - alert [ref=e108]
 ```

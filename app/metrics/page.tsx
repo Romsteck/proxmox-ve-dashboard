@@ -261,7 +261,7 @@ const MetricsPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-2" role="group" aria-label="Time Range">
                 {timeRanges.map(range => (
                   <label key={range.value} className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -295,7 +295,7 @@ const MetricsPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-2" role="group" aria-label="Nodes">
                 {mockNodes.map(node => (
                   <label key={node} className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -322,7 +322,7 @@ const MetricsPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-2" role="group" aria-label="Metrics">
                 {metricTypes.map(metric => (
                   <label key={metric.key} className="flex items-center gap-3 cursor-pointer">
                     <input

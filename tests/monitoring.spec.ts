@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test-utils';
 
 test.describe('Page Monitoring', () => {
   test('should load the monitoring page and display key elements', async ({ page }) => {
@@ -12,7 +12,7 @@ test.describe('Page Monitoring', () => {
     await expect(page.getByRole('button', { name: /Refresh All/i })).toBeVisible();
 
     // Vérifier la présence des cartes statistiques
-    await expect(page.getByRole('heading', { name: /Services/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Services' }).first()).toBeVisible();
     await expect(page.getByRole('heading', { name: /Backups/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Log Entries/i })).toBeVisible();
 
@@ -33,7 +33,12 @@ test.describe('Page Monitoring', () => {
     await page.getByPlaceholder('Search logs...').fill('error');
     await expect(page.getByPlaceholder('Search logs...')).toHaveValue('error');
 
-    const logLevelSelector = page.getByLabel(/Log Level/i);
+    // Lister tous les selects présents
+    const allSelects = page.locator('select');
+    const count = await allSelects.count();
+    // Utiliser le dernier select pour le log level
+    const logLevelSelector = allSelects.nth(count - 1);
+    await logLevelSelector.waitFor({ state: 'visible' });
     await logLevelSelector.selectOption('error');
     await expect(logLevelSelector).toHaveValue('error');
   });

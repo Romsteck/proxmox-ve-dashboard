@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test-utils';
 
 test.describe('Page Metrics', () => {
   test('should load the metrics page and display key elements', async ({ page }) => {
@@ -19,7 +19,7 @@ test.describe('Page Metrics', () => {
 
   test('should interact with time range selector', async ({ page }) => {
     await page.goto('/metrics');
-    await page.getByLabel('6 Hours').check();
+    await page.getByLabel('6 Hours').click();
     await expect(page.getByLabel('6 Hours')).toBeChecked();
   });
 

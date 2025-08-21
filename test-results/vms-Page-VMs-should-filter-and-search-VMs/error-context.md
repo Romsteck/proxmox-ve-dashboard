@@ -4,119 +4,75 @@
 - generic [active] [ref=e1]:
   - generic [ref=e2]:
     - generic [ref=e3]:
-      - generic [ref=e5]:
-        - img [ref=e7]
-        - generic [ref=e10]:
-          - heading "Proxmox VE" [level=1] [ref=e11]
-          - paragraph [ref=e12]: Dashboard
-      - navigation [ref=e13]:
-        - button "Dashboard" [ref=e14]:
-          - img [ref=e15]
-          - generic [ref=e18]: Dashboard
-        - button "Nodes" [ref=e19]:
-          - img [ref=e20]
-          - generic [ref=e23]: Nodes
-        - button "Virtual Machines" [ref=e24]:
-          - img [ref=e25]
-          - generic [ref=e27]: Virtual Machines
-        - button "Containers" [ref=e28]:
-          - img [ref=e29]
-          - generic [ref=e34]: Containers
-        - button "Storage" [ref=e35]:
-          - img [ref=e36]
-          - generic [ref=e38]: Storage
-        - button "Network" [ref=e39]:
-          - img [ref=e40]
-          - generic [ref=e45]: Network
-        - button "Metrics" [ref=e46]:
-          - img [ref=e47]
-          - generic [ref=e49]: Metrics
-        - button "Monitoring" [ref=e50]:
-          - img [ref=e51]
-          - generic [ref=e53]: Monitoring
-        - button "Alerts 2" [ref=e54]:
-          - img [ref=e55]
-          - generic [ref=e58]: Alerts
-          - generic [ref=e59]: "2"
-        - button "Security" [ref=e60]:
-          - img [ref=e61]
-          - generic [ref=e63]: Security
-        - button "Settings" [ref=e64]:
-          - img [ref=e65]
-          - generic [ref=e68]: Settings
-      - generic [ref=e72]:
-        - paragraph [ref=e73]: Admin
-        - paragraph [ref=e74]: admin@pve
-    - main [ref=e75]:
-      - generic [ref=e77]:
-        - generic [ref=e78]:
-          - paragraph [ref=e80]: Manage your VMs and LXC containers
-          - button "Refresh" [ref=e81]:
-            - generic [ref=e82]:
-              - img [ref=e83]
-              - text: Refresh
-        - generic [ref=e89]:
-          - generic [ref=e90]:
-            - generic [ref=e92]:
-              - img [ref=e93]
-              - heading "Total" [level=3] [ref=e95]
-            - generic [ref=e97]: "0"
-          - generic [ref=e98]:
-            - generic [ref=e100]:
-              - img [ref=e101]
-              - heading "Running" [level=3] [ref=e103]
-            - generic [ref=e105]: "0"
-          - generic [ref=e106]:
-            - generic [ref=e108]:
-              - img [ref=e109]
-              - heading "Stopped" [level=3] [ref=e111]
-            - generic [ref=e113]: "0"
-          - generic [ref=e114]:
-            - generic [ref=e116]:
-              - img [ref=e117]
-              - heading "VMs" [level=3] [ref=e119]
-            - generic [ref=e121]: "0"
-          - generic [ref=e122]:
-            - generic [ref=e124]:
-              - img [ref=e125]
-              - heading "Containers" [level=3] [ref=e130]
-            - generic [ref=e132]: "0"
-        - generic [ref=e133]:
-          - generic [ref=e135]:
-            - img [ref=e136]
-            - textbox "Search VMs and containers..." [ref=e139]
-          - generic [ref=e140]:
-            - combobox [ref=e141]:
-              - option "All Status" [selected]
-              - option "Running"
-              - option "Stopped"
-              - option "Paused"
-              - option "Suspended"
-            - combobox [ref=e142]:
-              - option "All Types" [selected]
-              - option "VMs"
-              - option "Containers"
-            - combobox [ref=e143]:
-              - option "All Nodes" [selected]
-        - generic [ref=e144]:
-          - heading "Virtual Machines & Containers (0)" [level=3] [ref=e147]
-          - table [ref=e150]:
-            - rowgroup [ref=e151]:
-              - row "ID Name Type Status Node CPU Memory Disk Uptime Actions" [ref=e152]:
-                - cell "ID" [ref=e153]
-                - cell "Name" [ref=e154]
-                - cell "Type" [ref=e155]
-                - cell "Status" [ref=e156]
-                - cell "Node" [ref=e157]
-                - cell "CPU" [ref=e158]
-                - cell "Memory" [ref=e159]
-                - cell "Disk" [ref=e160]
-                - cell "Uptime" [ref=e161]
-                - cell "Actions" [ref=e162]
-            - rowgroup [ref=e163]:
-              - row "Loading VMs and containers..." [ref=e164]:
-                - cell "Loading VMs and containers..." [ref=e165]
-  - button "Open Next.js Dev Tools" [ref=e171] [cursor=pointer]:
-    - img [ref=e172] [cursor=pointer]
-  - alert [ref=e175]
+      - generic [ref=e4]:
+        - generic [ref=e6]:
+          - img [ref=e8]
+          - generic [ref=e11]:
+            - heading "Proxmox VE" [level=1] [ref=e12]
+            - paragraph [ref=e13]: Dashboard
+        - navigation [ref=e14]:
+          - button "Dashboard" [ref=e15]:
+            - img [ref=e16]
+            - generic [ref=e19]: Dashboard
+          - button "Nodes" [ref=e20]:
+            - img [ref=e21]
+            - generic [ref=e24]: Nodes
+          - button "Virtual Machines" [ref=e25]:
+            - img [ref=e26]
+            - generic [ref=e28]: Virtual Machines
+          - button "Containers" [ref=e29]:
+            - img [ref=e30]
+            - generic [ref=e35]: Containers
+          - button "Storage" [ref=e36]:
+            - img [ref=e37]
+            - generic [ref=e39]: Storage
+          - button "Network" [ref=e40]:
+            - img [ref=e41]
+            - generic [ref=e46]: Network
+          - button "Metrics" [ref=e47]:
+            - img [ref=e48]
+            - generic [ref=e50]: Metrics
+          - button "Monitoring" [ref=e51]:
+            - img [ref=e52]
+            - generic [ref=e54]: Monitoring
+          - button "Alerts 2" [ref=e55]:
+            - img [ref=e56]
+            - generic [ref=e59]: Alerts
+            - generic [ref=e60]: "2"
+          - button "Security" [ref=e61]:
+            - img [ref=e62]
+            - generic [ref=e64]: Security
+          - button "Settings" [ref=e65]:
+            - img [ref=e66]
+            - generic [ref=e69]: Settings
+        - generic [ref=e73]:
+          - paragraph [ref=e74]: Admin
+          - paragraph [ref=e75]: admin@pve
+      - generic "Déconnecté" [ref=e77]:
+        - img [ref=e78]
+        - generic [ref=e82]: Déconnecté
+    - main [ref=e83]:
+      - generic [ref=e85]:
+        - heading "Connexion au serveur Proxmox" [level=1] [ref=e86]
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]: Adresse du serveur
+            - 'textbox "ex: proxmox.local" [ref=e90]'
+          - generic [ref=e91]:
+            - generic [ref=e92]: Port
+            - spinbutton [ref=e93]: "8006"
+          - generic [ref=e94]:
+            - generic [ref=e95]: Nom d'utilisateur
+            - textbox [ref=e96]
+          - generic [ref=e97]:
+            - generic [ref=e98]: Token API
+            - textbox [ref=e99]
+          - generic [ref=e100]:
+            - checkbox "Autoriser TLS non sécurisé" [ref=e101]
+            - generic [ref=e102]: Autoriser TLS non sécurisé
+          - button "Se connecter" [ref=e103]:
+            - generic [ref=e104]: Se connecter
+  - button "Open Next.js Dev Tools" [ref=e110] [cursor=pointer]:
+    - img [ref=e111] [cursor=pointer]
+  - alert [ref=e114]: Connexion
 ```

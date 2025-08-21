@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test-utils';
 
 test.describe('Page VMs', () => {
   test('should load the VMs page and display key elements', async ({ page }) => {

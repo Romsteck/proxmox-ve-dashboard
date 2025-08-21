@@ -120,6 +120,7 @@ const AlertThresholdForm: React.FC<AlertThresholdFormProps> = ({ threshold, onSa
               </label>
               <input
                 type="text"
+                aria-label="Name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -133,6 +134,7 @@ const AlertThresholdForm: React.FC<AlertThresholdFormProps> = ({ threshold, onSa
                 Type
               </label>
               <select
+                aria-label="Metric"
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -164,6 +166,7 @@ const AlertThresholdForm: React.FC<AlertThresholdFormProps> = ({ threshold, onSa
                 </select>
                 <input
                   type="number"
+                  aria-label="Value"
                   value={formData.value}
                   onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) })}
                   className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
@@ -178,6 +181,7 @@ const AlertThresholdForm: React.FC<AlertThresholdFormProps> = ({ threshold, onSa
                 Severity
               </label>
               <select
+                aria-label="Severity"
                 value={formData.severity}
                 onChange={(e) => setFormData({ ...formData, severity: e.target.value as AlertSeverity })}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"

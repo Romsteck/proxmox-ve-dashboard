@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './test-utils';
 
 test.describe('Page Connection', () => {
   test('Chargement de la page connection et interaction avec la liste des serveurs', async ({ page }) => {
@@ -26,10 +26,13 @@ test.describe('Page Connection', () => {
     // Soumettre le formulaire
     await page.getByRole('button', { name: /Save/i }).click();
 
+    // Attendre que le formulaire se ferme (il y a un délai de 1 seconde)
+    await page.waitForTimeout(2000);
+
     // Vérifier que le formulaire est fermé après ajout
     await expect(page.getByRole('heading', { name: /Add New Server/i })).not.toBeVisible();
 
     // Vérifier que le serveur ajouté apparaît dans la liste
-    await expect(page.getByRole('listitem').filter({ hasText: 'test-server.local' })).toBeVisible();
+    await expect(page.getByRole('listitem').filter({ hasText: 'test-server.local' }).first()).toBeVisible();
   });
 });
