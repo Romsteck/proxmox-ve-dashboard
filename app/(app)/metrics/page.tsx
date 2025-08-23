@@ -43,6 +43,14 @@ const metricTypes = [
   { key: 'network', label: 'Network I/O', icon: Network, color: '#f59e0b', unit: 'MB/s' },
 ];
 
+// Chart data point type
+interface ChartPoint {
+  time: string;
+  value: number;
+  name: string;
+  node: string;
+  [key: string]: string | number;
+}
 const MetricsPage: React.FC = () => {
   const performanceMetrics = usePerformanceMonitor('MetricsPage');
   
@@ -147,10 +155,10 @@ const MetricsPage: React.FC = () => {
 
   // Prepare chart data
   const chartData = useMemo(() => {
-    const charts: Record<string, any[]> = {};
+    const charts: Record<string, ChartPoint[]> = {};
     
     selectedMetrics.forEach(metricKey => {
-      const chartPoints: any[] = [];
+      const chartPoints: ChartPoint[] = [];
       
       Object.entries(metricsData).forEach(([node, data]) => {
         data.data.forEach(point => {

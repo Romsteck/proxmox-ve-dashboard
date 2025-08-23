@@ -14,6 +14,10 @@ export default function ClientRootGuard({ children }: { children: React.ReactNod
     }
   }, [isConnected, isConnecting, pathname, router]);
 
+  if (!isConnected && !isConnecting && pathname !== "/connection") {
+    // On bloque le rendu tant que la redirection n'est pas faite
+    return null;
+  }
   return <>{children}</>;
 }
 

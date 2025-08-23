@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navigation from "@/components/Navigation";
 import ToastProvider from "@/components/ui/Toast";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
 import { ConnectionProvider } from "@/lib/contexts/ConnectionContext";
+import ClientRootGuard from "@/components/ClientRootGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,8 +41,15 @@ export default function RootLayout({
       >
         <ConnectionProvider>
           <PageErrorBoundary>
-            {children}
-            <ToastProvider />
+            <ClientRootGuard>
+              <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+                <Navigation />
+                <main className="flex-1 overflow-auto">
+                  {children}
+                </main>
+              </div>
+              <ToastProvider />
+            </ClientRootGuard>
           </PageErrorBoundary>
         </ConnectionProvider>
       </body>
