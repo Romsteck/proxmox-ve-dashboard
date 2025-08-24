@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import Navigation from "@/components/Navigation";
 import ToastProvider from "@/components/ui/Toast";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
@@ -35,24 +35,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ConnectionProvider>
-          <PageErrorBoundary>
-            <ClientRootGuard>
-              <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
-                <Navigation />
-                <main className="flex-1 overflow-auto">
-                  {children}
-                </main>
-              </div>
-              <ToastProvider />
-            </ClientRootGuard>
-          </PageErrorBoundary>
-        </ConnectionProvider>
-      </body>
-    </html>
+    <ConnectionProvider>
+      <PageErrorBoundary>
+        <ClientRootGuard>
+          <div
+            className={`flex h-screen bg-gray-50 dark:bg-gray-950 ${geistSans.variable} ${geistMono.variable} antialiased`}
+          >
+            <Navigation />
+            <main className="flex-1 overflow-auto">
+              {children}
+            </main>
+          </div>
+          <ToastProvider />
+        </ClientRootGuard>
+      </PageErrorBoundary>
+    </ConnectionProvider>
   );
 }

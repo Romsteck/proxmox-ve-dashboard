@@ -2,76 +2,44 @@
 
 ```yaml
 - generic [active] [ref=e1]:
-  - generic [ref=e2]:
-    - generic [ref=e3]:
-      - generic [ref=e4]:
-        - generic [ref=e6]:
-          - img [ref=e8]
-          - generic [ref=e11]:
-            - heading "Proxmox VE" [level=1] [ref=e12]
-            - paragraph [ref=e13]: Dashboard
-        - navigation [ref=e14]:
-          - button "Dashboard" [ref=e15]:
-            - img [ref=e16]
-            - generic [ref=e19]: Dashboard
-          - button "Nodes" [ref=e20]:
-            - img [ref=e21]
-            - generic [ref=e24]: Nodes
-          - button "Virtual Machines" [ref=e25]:
-            - img [ref=e26]
-            - generic [ref=e28]: Virtual Machines
-          - button "Containers" [ref=e29]:
-            - img [ref=e30]
-            - generic [ref=e35]: Containers
-          - button "Storage" [ref=e36]:
-            - img [ref=e37]
-            - generic [ref=e39]: Storage
-          - button "Network" [ref=e40]:
-            - img [ref=e41]
-            - generic [ref=e46]: Network
-          - button "Metrics" [ref=e47]:
-            - img [ref=e48]
-            - generic [ref=e50]: Metrics
-          - button "Monitoring" [ref=e51]:
-            - img [ref=e52]
-            - generic [ref=e54]: Monitoring
-          - button "Alerts 2" [ref=e55]:
-            - img [ref=e56]
-            - generic [ref=e59]: Alerts
-            - generic [ref=e60]: "2"
-          - button "Security" [ref=e61]:
-            - img [ref=e62]
-            - generic [ref=e64]: Security
-          - button "Settings" [ref=e65]:
-            - img [ref=e66]
-            - generic [ref=e69]: Settings
-        - generic [ref=e73]:
-          - paragraph [ref=e74]: Admin
-          - paragraph [ref=e75]: admin@pve
-      - generic "Déconnecté" [ref=e77]:
-        - img [ref=e78]
-        - generic [ref=e82]: Déconnecté
-    - main [ref=e83]:
-      - main [ref=e84]:
-        - heading "Welcome to Proxmox VE Dashboard" [level=1] [ref=e85]
-        - generic [ref=e86]:
-          - link "Virtual Machines Manage and monitor your VMs and containers." [ref=e87] [cursor=pointer]:
-            - /url: /vms
-            - heading "Virtual Machines" [level=2] [ref=e88] [cursor=pointer]
-            - paragraph [ref=e89] [cursor=pointer]: Manage and monitor your VMs and containers.
-          - link "Monitoring View real-time metrics and logs for your nodes." [ref=e90] [cursor=pointer]:
-            - /url: /monitoring
-            - heading "Monitoring" [level=2] [ref=e91] [cursor=pointer]
-            - paragraph [ref=e92] [cursor=pointer]: View real-time metrics and logs for your nodes.
-          - link "Alerts Configure and view alerts for your cluster." [ref=e93] [cursor=pointer]:
-            - /url: /alerts
-            - heading "Alerts" [level=2] [ref=e94] [cursor=pointer]
-            - paragraph [ref=e95] [cursor=pointer]: Configure and view alerts for your cluster.
-          - link "Settings Customize your dashboard settings." [ref=e96] [cursor=pointer]:
-            - /url: /settings
-            - heading "Settings" [level=2] [ref=e97] [cursor=pointer]
-            - paragraph [ref=e98] [cursor=pointer]: Customize your dashboard settings.
-  - button "Open Next.js Dev Tools" [ref=e104] [cursor=pointer]:
-    - img [ref=e105] [cursor=pointer]
-  - alert [ref=e108]
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - heading "Tableau de bord Proxmox VE" [level=1] [ref=e8]
+      - paragraph [ref=e9]: Gérez et surveillez vos serveurs Proxmox en toute simplicité. Connectez-vous pour commencer.
+    - generic [ref=e10]:
+      - heading "Connexion au serveur" [level=3] [ref=e12]
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: Adresse du serveur
+          - textbox "Adresse du serveur" [ref=e17]
+          - paragraph [ref=e18]: Nom d'hôte ou IP du serveur Proxmox.
+        - generic [ref=e19]:
+          - generic [ref=e20]: Port
+          - spinbutton "Port" [ref=e21]: "8006"
+          - paragraph [ref=e22]: "Port par défaut : 8006"
+        - generic [ref=e23]:
+          - generic [ref=e24]: Nom d'utilisateur
+          - textbox "Nom d'utilisateur" [ref=e25]
+          - paragraph [ref=e26]: "Format : utilisateur@realm (ex : root@pam)"
+        - generic [ref=e27]:
+          - generic [ref=e28]: Jeton API
+          - generic [ref=e29]:
+            - textbox "Jeton API" [ref=e30]
+            - button "Afficher le jeton" [ref=e31]:
+              - img [ref=e32]
+          - paragraph [ref=e35]: Générez un token dans l’interface Proxmox (Datacenter → Permissions → API Tokens).
+        - generic [ref=e36]:
+          - checkbox "Autoriser TLS non sécurisé (déconseillé)" [ref=e37]
+          - generic [ref=e38] [cursor=pointer]:
+            - img [ref=e39] [cursor=pointer]
+            - text: Autoriser TLS non sécurisé (déconseillé)
+        - generic [ref=e43]:
+          - button "Tester la connexion" [ref=e44]:
+            - generic [ref=e45]: Tester la connexion
+          - button "Enregistrer" [ref=e46]:
+            - generic [ref=e47]: Enregistrer
+  - button "Open Next.js Dev Tools" [ref=e53] [cursor=pointer]:
+    - img [ref=e54] [cursor=pointer]
+  - alert [ref=e57]: Connexion
 ```

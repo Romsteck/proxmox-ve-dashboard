@@ -122,7 +122,9 @@ export function useConnection(options: UseConnectionOptions = {}): UseConnection
       }
       return success;
     } catch (error) {
-      console.error('Connection failed:', error);
+      console.error(
+        `Échec de connexion : ${error instanceof Error ? error.message : error}. Vérifiez la configuration ou l’état du serveur.`
+      );
       return false;
     }
   }, [context, persistConfig, setLocalConfig]);
@@ -272,7 +274,12 @@ export function useConnectionForm(initialConfig?: Partial<ConnectionConfig>) {
       insecureTLS: false,
     }
   );
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<{
+    host?: string;
+    port?: string;
+    username?: string;
+    token?: string;
+  }>({});
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
 
@@ -330,14 +337,14 @@ export function useConnectionForm(initialConfig?: Partial<ConnectionConfig>) {
     validate,
     testConfig,
     saveConfig,
-    isValid: validationErrors.length === 0 && (
+    isValid:
+      Object.keys(validationErrors).length === 0 &&
       formData.host !== undefined &&
       formData.port !== undefined &&
       formData.username !== undefined &&
       formData.token !== undefined &&
       formData.insecureTLS !== undefined &&
-      ConnectionService.isConfigurationComplete(formData as ConnectionConfig)
-    ),
+      ConnectionService.isConfigurationComplete(formData as ConnectionConfig),
   };
 }
 

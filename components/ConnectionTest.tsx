@@ -54,6 +54,9 @@ function ConnectionForm() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="192.168.1.100"
           />
+          {validationErrors.host && (
+            <p className="text-red-600 text-xs mt-1">{validationErrors.host}</p>
+          )}
         </div>
 
         <div>
@@ -68,6 +71,9 @@ function ConnectionForm() {
             min="1"
             max="65535"
           />
+          {validationErrors.port && (
+            <p className="text-red-600 text-xs mt-1">{validationErrors.port}</p>
+          )}
         </div>
 
         <div>
@@ -81,6 +87,9 @@ function ConnectionForm() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="root@pam"
           />
+          {validationErrors.username && (
+            <p className="text-red-600 text-xs mt-1">{validationErrors.username}</p>
+          )}
         </div>
 
         <div>
@@ -94,6 +103,9 @@ function ConnectionForm() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="API Token"
           />
+          {validationErrors.token && (
+            <p className="text-red-600 text-xs mt-1">{validationErrors.token}</p>
+          )}
         </div>
 
         <div className="flex items-center">
@@ -109,16 +121,7 @@ function ConnectionForm() {
           </label>
         </div>
 
-        {validationErrors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3">
-            <h4 className="text-red-800 font-medium mb-2">Erreurs de validation:</h4>
-            <ul className="text-red-700 text-sm space-y-1">
-              {validationErrors.map((error, index) => (
-                <li key={index}>• {error}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {/* Suppression de l'affichage global des erreurs, désormais affichées sous chaque champ */}
 
         {testResult && (
           <div className={`border rounded-md p-3 ${

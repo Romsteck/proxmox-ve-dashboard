@@ -2,121 +2,43 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
-function parseBoolean(value: string | null, defaultValue: boolean): boolean {
-  if (value === null) return defaultValue;
-  const v = value.toLowerCase();
-  return v === 'true' || v === '1' || v === 'yes';
-}
-
-async function getInsecureDispatcher(protocol: string, verifyTLS: boolean) {
-  if (protocol === 'https' && verifyTLS === false) {
-    try {
-      // @ts-ignore - 'undici' est résolu à l'exécution par Next/Node (pas besoin de types locaux)
-      const undici: any = await import('undici');
-      return new undici.Agent({
-        connect: { rejectUnauthorized: false },
-      });
-    } catch {
-      // undici not available - proceed without custom dispatcher
-      return undefined;
-    }
-  }
-  return undefined;
-}
-
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const params = url.searchParams;
-
-  const host = params.get('host');
-  const port = params.get('port') ?? '8006';
-  const protocol = (params.get('protocol') ?? 'https').toLowerCase();
-  const verifyTLS = parseBoolean(params.get('verifyTLS'), true);
-
+  const host = url.searchParams.get('host');
+  console.log("[API /api/proxmox/version] Param host reçu :", host);
   if (!host) {
-    return NextResponse.json({ error: "Missing required parameter 'host'" }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: "Missing required parameter 'host'" },
+      { status: 400 }
+    );
   }
 
-  if (protocol !== 'http' && protocol !== 'https') {
-    return NextResponse.json({ error: "Invalid 'protocol' parameter. Expected 'http' or 'https'." }, { status: 400 });
-  }
-
-  const targetUrl = `${protocol}://${host}:${port}/api2/json/version`;
-
-  const controller = new AbortController();
-  const timeout = 10000;
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const isWindows = process.platform === 'win32';
+  const args = isWindows ? ['-n', '1', host] : ['-c', '1', host];
 
   try {
-    const fetchOptions: RequestInit & { dispatcher?: any } = {
-      method: 'GET',
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-    };
-
-    // Récupérer le token d'authentification depuis les headers Authorization de la requête entrante
-    const authHeader = request.headers.get('authorization');
-    if (authHeader) {
-      fetchOptions.headers = {
-        ...fetchOptions.headers,
-        Authorization: authHeader,
-      };
-    }
-
-    const dispatcher = await getInsecureDispatcher(protocol, verifyTLS);
-    if (dispatcher) {
-      fetchOptions.dispatcher = dispatcher;
-    }
-
-    const response = await fetch(targetUrl, fetchOptions);
-
-    clearTimeout(timeoutId);
-
-    const contentType = response.headers.get('content-type') || '';
-    const isJson = contentType.includes('application/json');
-
-    // Try to parse response body
-    let body: any = null;
-    try {
-      body = isJson ? await response.json() : await response.text();
-    } catch {
-      // ignore parsing errors
-    }
-
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          error: 'Upstream error',
-          details: {
-            status: response.status,
-            statusText: response.statusText,
-            body,
-            targetUrl,
-          },
-        },
-        { status: response.status }
-      );
-    }
-
-    if (isJson && body != null) {
-      return NextResponse.json(body, { status: response.status });
-    }
-
-    return NextResponse.json(
-      {
-        error: 'Invalid upstream response',
-        details: { contentType, targetUrl },
-      },
-      { status: 502 }
-    );
+    const { spawn } = await import('child_process');
+    await new Promise<void>((resolve, reject) => {
+      const ping = spawn('ping', args);
+      ping.stdout.on('data', (data) => {
+        console.log("[API /api/proxmox/version] ping stdout:", data.toString());
+      });
+      ping.stderr.on('data', (data) => {
+        console.error("[API /api/proxmox/version] ping stderr:", data.toString());
+      });
+      ping.on('error', (err) => {
+        console.error("[API /api/proxmox/version] ping error:", err);
+        reject(err);
+      });
+      ping.on('exit', (code) => {
+        console.log("[API /api/proxmox/version] ping exit code:", code);
+        code === 0 ? resolve() : reject(new Error('Ping failed'));
+      });
+    });
+    console.log("[API /api/proxmox/version] SUCCÈS ping, retour JSON { success: true }", { host, timestamp: new Date().toISOString() });
+    return NextResponse.json({ success: true });
   } catch (err: any) {
-    clearTimeout(timeoutId);
-    const status = err?.name === 'AbortError' ? 504 : 502;
-    const message = err?.name === 'AbortError' ? 'Upstream timeout' : err?.message || 'Upstream fetch failed';
-    return NextResponse.json(
-      { error: message, details: { targetUrl } },
-      { status }
-    );
+    console.error("[API /api/proxmox/version] catch error:", err, { host, timestamp: new Date().toISOString() });
+    return NextResponse.json({ success: false, error: err.message || String(err) });
   }
 }

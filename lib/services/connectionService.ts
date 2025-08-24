@@ -18,8 +18,7 @@ export class ConnectionService {
     
     try {
       const validatedConfig = validateConnectionConfig(config);
-      const protocol = 'https';
-      const testUrl = `${this.TEST_ENDPOINT}?host=${encodeURIComponent(validatedConfig.host)}&port=${encodeURIComponent(String(validatedConfig.port))}&protocol=${encodeURIComponent(protocol)}&verifyTLS=${encodeURIComponent(String(!validatedConfig.insecureTLS))}`;
+      const testUrl = `${this.TEST_ENDPOINT}?host=${encodeURIComponent(validatedConfig.host)}`;
       const headers = new Headers({
         'Content-Type': 'application/json',
       });
@@ -28,6 +27,14 @@ export class ConnectionService {
       }
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.DEFAULT_TIMEOUT);
+
+      // LOG DEBUG : avant fetch
+      console.log("[DEBUG testConnection] Avant fetch", {
+        testUrl,
+        headers: Object.fromEntries(headers.entries()),
+        config: { ...validatedConfig },
+        timestamp: new Date().toISOString()
+      });
 
       try {
         const response = await fetch(testUrl, {
@@ -40,20 +47,39 @@ export class ConnectionService {
         clearTimeout(timeoutId);
         const responseTime = Date.now() - startTime;
 
-        if (!response.ok) {
-          let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-          if (response.status === 502 || response.status === 504) {
-            errorMessage = "Impossible de joindre le serveur Proxmox distant depuis le backend. " +
-              "Vérifiez la connectivité réseau, l’accessibilité du port ou le déploiement du backend sur le même réseau que Proxmox.";
-          }
+        // LOG DEBUG : après fetch, avant parsing
+        console.log("[DEBUG testConnection] Après fetch", {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          url: response.url,
+          responseTime,
+          timestamp: new Date().toISOString()
+        });
+
+        // Vérifier la réponse JSON pour le ping
+        let resultData: any = {};
+        try {
+          resultData = await response.clone().json();
+        } catch (err) {
+          console.error("[DEBUG testConnection] Erreur parsing JSON (1)", err);
+        }
+
+        if (!response.ok || resultData.success === false) {
+          const errorMessage = resultData.error || (!response.ok
+            ? `HTTP ${response.status}: ${response.statusText}`
+            : `Ping échoué pour ${validatedConfig.host}`);
+          // LOG DEBUG : erreur réseau ou API
+          console.error("[DEBUG testConnection] Erreur réseau/API", {
+            errorMessage,
+            resultData,
+            status: response.status,
+            timestamp: new Date().toISOString()
+          });
           return {
             success: false,
             responseTime,
-            error: this.createConnectionError(
-              response.status === 401 ? 'authentication' : 'network',
-              errorMessage,
-              response.status.toString()
-            ),
+            error: this.createConnectionError('network', errorMessage),
           };
         }
 
@@ -64,9 +90,16 @@ export class ConnectionService {
             version: data?.data?.version || undefined,
             release: data?.data?.release || undefined,
           };
-        } catch {
-          // Ignorer les erreurs de parsing, l'important est que la connexion fonctionne
+        } catch (err) {
+          console.error("[DEBUG testConnection] Erreur parsing JSON (2)", err);
         }
+
+        // LOG DEBUG : succès
+        console.log("[DEBUG testConnection] Succès connexion", {
+          serverInfo,
+          responseTime,
+          timestamp: new Date().toISOString()
+        });
 
         return {
           success: true,
@@ -77,6 +110,13 @@ export class ConnectionService {
       } catch (fetchError) {
         clearTimeout(timeoutId);
         const responseTime = Date.now() - startTime;
+
+        // LOG DEBUG : fetchError
+        console.error("[DEBUG testConnection] fetchError", {
+          fetchError,
+          responseTime,
+          timestamp: new Date().toISOString()
+        });
 
         if (fetchError instanceof Error) {
           if (fetchError.name === 'AbortError') {
@@ -111,6 +151,11 @@ export class ConnectionService {
       }
 
     } catch (validationError) {
+      // LOG DEBUG : validationError
+      console.error("[DEBUG testConnection] validationError", {
+        validationError,
+        timestamp: new Date().toISOString()
+      });
       return {
         success: false,
         error: this.createConnectionError(
@@ -151,33 +196,49 @@ export class ConnectionService {
 
   static validateConnectionParams(config: Partial<ConnectionConfig>): {
     isValid: boolean;
-    errors: string[];
+    errors: {
+      host?: string;
+      port?: string;
+      username?: string;
+      token?: string;
+    };
   } {
-    const errors: string[] = [];
+    const errors: {
+      host?: string;
+      port?: string;
+      username?: string;
+      token?: string;
+    } = {};
 
     if (!config.host || config.host.trim() === '') {
-      errors.push('Host is required');
+      errors.host = "L'hôte est obligatoire";
     } else {
       const hostRegex = /^[a-zA-Z0-9.-]+$/;
       if (!hostRegex.test(config.host.trim())) {
-        errors.push('Invalid host format');
+        errors.host = "Format d'hôte invalide";
       }
     }
 
-    if (!config.port || config.port < 1 || config.port > 65535) {
-      errors.push('Port must be between 1 and 65535');
+    if (
+      config.port === undefined ||
+      config.port === null ||
+      isNaN(Number(config.port)) ||
+      Number(config.port) < 1 ||
+      Number(config.port) > 65535
+    ) {
+      errors.port = 'Le port doit être un nombre entre 1 et 65535';
     }
 
     if (!config.username || config.username.trim() === '') {
-      errors.push('Username is required');
+      errors.username = "Le nom d'utilisateur est obligatoire";
     }
 
     if (!config.token || config.token.trim() === '') {
-      errors.push('Token is required');
+      errors.token = 'Le token est obligatoire';
     }
 
     return {
-      isValid: errors.length === 0,
+      isValid: Object.keys(errors).length === 0,
       errors,
     };
   }

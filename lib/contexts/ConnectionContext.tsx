@@ -65,7 +65,7 @@ type MultiConnectionAction =
   | { type: 'UPDATE_CONNECTION'; payload: { id: string; updates: Partial<ConnectionState> } };
 
 function connectionReducer(state: MultiConnectionState, action: MultiConnectionAction): MultiConnectionState {
-  console.log("[connectionReducer] ACTION", { action, prevState: state, date: new Date().toISOString() });
+  // console.log("[connectionReducer] ACTION", { action, prevState: state, date: new Date().toISOString() });
   let nextState: MultiConnectionState;
   switch (action.type) {
     case 'ADD_CONNECTION': {
@@ -114,7 +114,7 @@ function connectionReducer(state: MultiConnectionState, action: MultiConnectionA
     default:
       nextState = state;
   }
-  console.log("[connectionReducer] NEXT_STATE", { nextState, date: new Date().toISOString() });
+  // console.log("[connectionReducer] NEXT_STATE", { nextState, date: new Date().toISOString() });
   return nextState;
 }
 
@@ -166,10 +166,20 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
   const testConnection = useCallback(async (config?: ConnectionConfig): Promise<ConnectionTestResult> => {
     const active = getActiveConnection();
     const configToTest = config || active?.config;
-    console.log("[ConnectionContext.testConnection] DÉBUT", { config, configToTest, activeServerId: state.activeServerId, date: new Date().toISOString() });
+    // console.log("[ConnectionContext.testConnection] DÉBUT", { config, configToTest, activeServerId: state.activeServerId, date: new Date().toISOString() });
   
     if (!configToTest || !state.activeServerId) {
-      console.log("[ConnectionContext.testConnection] Pas de config ou d'activeServerId", { configToTest, activeServerId: state.activeServerId, date: new Date().toISOString() });
+      // Log détaillé pour diagnostic
+      console.error(
+        "[ConnectionContext.testConnection] No active connection configuration provided",
+        {
+          activeServerId: state.activeServerId,
+          configToTest,
+          connections: state.connections,
+          activeConnection: getActiveConnection(),
+          date: new Date().toISOString(),
+        }
+      );
       return {
         success: false,
         error: {
@@ -187,7 +197,7 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
   
     try {
       const result = await ConnectionService.testConnectionWithRetry(configToTest);
-      console.log("[ConnectionContext.testConnection] Résultat testConnectionWithRetry", { result, date: new Date().toISOString() });
+      // console.log("[ConnectionContext.testConnection] Résultat testConnectionWithRetry", { result, date: new Date().toISOString() });
   
       if (!result.success && result.error) {
         dispatch({
@@ -203,8 +213,13 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
         type: 'UPDATE_CONNECTION',
         payload: { id: state.activeServerId, updates: { error: errorMessage } },
       });
+
+      // Log synthétique et explicite en cas d’échec de test de connexion
+      console.error(
+        `Échec de test de connexion : ${errorMessage}. Vérifiez la configuration ou l’état du serveur.`
+      );
   
-      console.log("[ConnectionContext.testConnection] ERREUR", { error, date: new Date().toISOString() });
+      // console.log("[ConnectionContext.testConnection] ERREUR", { error, date: new Date().toISOString() });
   
       return {
         success: false,
@@ -219,15 +234,15 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
         type: 'UPDATE_CONNECTION',
         payload: { id: state.activeServerId, updates: { isValidating: false } },
       });
-      console.log("[ConnectionContext.testConnection] FIN", { activeServerId: state.activeServerId, date: new Date().toISOString() });
+      // console.log("[ConnectionContext.testConnection] FIN", { activeServerId: state.activeServerId, date: new Date().toISOString() });
     }
   }, [getActiveConnection, state.activeServerId]);
 
   // Se connecter
   const connect = useCallback(async (serverId: string, config: ConnectionConfig): Promise<boolean> => {
-    console.log("[ConnectionContext.connect] DÉBUT", { serverId, config, activeServerId: state.activeServerId, date: new Date().toISOString() });
+    // console.log("[ConnectionContext.connect] DÉBUT", { serverId, config, activeServerId: state.activeServerId, date: new Date().toISOString() });
     if (!serverId) {
-      console.log("[ConnectionContext.connect] Pas de serverId, abandon", { date: new Date().toISOString() });
+      // console.log("[ConnectionContext.connect] Pas de serverId, abandon", { date: new Date().toISOString() });
       return false;
     }
   
@@ -238,9 +253,9 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
   
     try {
       const validatedConfig = validateConnectionConfig(config);
-      console.log("[ConnectionContext.connect] Config validée", { validatedConfig, date: new Date().toISOString() });
+      // console.log("[ConnectionContext.connect] Config validée", { validatedConfig, date: new Date().toISOString() });
       const result = await testConnection(validatedConfig);
-      console.log("[ConnectionContext.connect] Résultat testConnection", { result, date: new Date().toISOString() });
+      // console.log("[ConnectionContext.connect] Résultat testConnection", { result, date: new Date().toISOString() });
   
       if (result.success) {
         dispatch({
@@ -250,7 +265,7 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
             updates: { config: validatedConfig, status: 'connected', lastConnected: new Date() },
           },
         });
-        console.log("[ConnectionContext.connect] CONNECTÉ", { serverId, date: new Date().toISOString() });
+        // console.log("[ConnectionContext.connect] CONNECTÉ", { serverId, date: new Date().toISOString() });
         return true;
       } else {
         dispatch({
@@ -260,7 +275,11 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
             updates: { status: 'error', error: result.error?.message || 'Connection failed' },
           },
         });
-        console.log("[ConnectionContext.connect] ÉCHEC connexion", { error: result.error, date: new Date().toISOString() });
+        // Log synthétique et explicite en cas d’échec de connexion
+        console.error(
+          `Échec de connexion : ${result.error?.message || 'Erreur inconnue'}. Vérifiez la configuration ou l’état du serveur.`
+        );
+        // console.log("[ConnectionContext.connect] ÉCHEC connexion", { error: result.error, date: new Date().toISOString() });
         return false;
       }
     } catch (error) {
@@ -269,7 +288,11 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
         type: 'UPDATE_CONNECTION',
         payload: { id: serverId, updates: { status: 'error', error: errorMessage } },
       });
-      console.log("[ConnectionContext.connect] ERREUR", { error, date: new Date().toISOString() });
+      // Log synthétique et explicite en cas d’échec de connexion
+      console.error(
+        `Échec de connexion : ${errorMessage}. Vérifiez la configuration ou l’état du serveur.`
+      );
+      // console.log("[ConnectionContext.connect] ERREUR", { error, date: new Date().toISOString() });
       return false;
     }
   }, [testConnection]);
