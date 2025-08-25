@@ -22,9 +22,32 @@ export default function ConnectionPage() {
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showToken, setShowToken] = useState(false);
   const [insecureTLS, setInsecureTLS] = useState(false);
   const [recentServers, setRecentServers] = useState<Array<{host: string, port: string, username: string, token?: string, insecureTLS?: boolean}>>([]);
+  
+  // Validation avancée côté client
+  const validateFields = () => {
+    // Host : non vide, hostname ou IP
+    if (!host.trim()) return "L'adresse du serveur est requise.";
+    // Simple regex hostname ou IPv4/IPv6
+    const hostRegex = /^(([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}|localhost|(\d{1,3}\.){3}\d{1,3}|(\[[0-9a-fA-F:]+\]))$/;
+    if (!hostRegex.test(host.trim())) return "Adresse du serveur invalide (nom d'hôte ou IP).";
+  
+    // Port : numérique, 1-65535
+    const portNum = Number(port);
+    if (!port || isNaN(portNum)) return "Le port doit être un nombre.";
+    if (portNum < 1 || portNum > 65535) return "Le port doit être compris entre 1 et 65535.";
+  
+    // Username : format utilisateur@realm
+    const usernameRegex = /^[^@]+@[^@]+$/;
+    if (!username.trim()) return "Le nom d'utilisateur est requis.";
+    if (!usernameRegex.test(username.trim())) return "Le nom d'utilisateur doit être au format utilisateur@realm.";
+  
+    // Token : non vide
+    if (!token.trim()) return "Le jeton API est requis.";
+  
+    return null;
+  };
   // État pour le statut de chaque serveur : "pending" | "online" | "offline"
   const [serverStatus, setServerStatus] = useState<Record<string, "pending" | "online" | "offline">>({});
 
@@ -123,10 +146,22 @@ export default function ConnectionPage() {
   // Indicatif visuel pour le test de connexion manuel
   const currentTestStatus = serverStatus[getServerId()];
 
+  const [submitLocked, setSubmitLocked] = useState(false);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || submitLocked) return; // Empêche double soumission
     setError(null);
+  
+    // Validation avancée
+    const validationError = validateFields();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+  
     setLoading(true);
+    setSubmitLocked(true);
     try {
       const id = getServerId();
       addConnection(id, {
@@ -156,12 +191,20 @@ export default function ConnectionPage() {
         });
         router.push("/"); // Redirection vers le dashboard uniquement si la connexion est validée
       } else {
-        setError("Échec de la connexion au serveur.");
+        setError("Identifiants invalides ou connexion refusée par le serveur.");
       }
     } catch (e: any) {
-      setError(e?.message || "Erreur inconnue lors de la connexion.");
+      // Affichage d'un message d'erreur plus précis si possible
+      if (e?.message?.includes("ECONNREFUSED") || e?.message?.includes("Failed to fetch")) {
+        setError("Impossible de joindre le serveur (adresse ou port incorrect, ou serveur injoignable).");
+      } else if (e?.message?.toLowerCase().includes("unauthorized")) {
+        setError("Identifiants invalides.");
+      } else {
+        setError(e?.message || "Erreur inconnue lors de la connexion.");
+      }
     } finally {
       setLoading(false);
+      setTimeout(() => setSubmitLocked(false), 1000); // Débloque après 1s pour éviter double clic
     }
   };
 
@@ -298,7 +341,7 @@ export default function ConnectionPage() {
                   <input
                     id="token"
                     name="token"
-                    type={showToken ? "text" : "password"}
+                    type="password"
                     className="mt-1 w-full border rounded px-3 py-2 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none transition pr-10"
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
@@ -306,16 +349,9 @@ export default function ConnectionPage() {
                     required
                     aria-describedby="token-help"
                     autoComplete="current-password"
+                    aria-invalid={!!error && error.toLowerCase().includes("jeton")}
                   />
-                  <button
-                    type="button"
-                    tabIndex={0}
-                    aria-label={showToken ? "Masquer le jeton" : "Afficher le jeton"}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 focus:outline-none"
-                    onClick={() => setShowToken((v) => !v)}
-                  >
-                    {showToken ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+                  {/* Suppression du bouton d'affichage du token pour sécurité */}
                 </div>
                 <p id="token-help" className="text-xs text-gray-500 dark:text-gray-400 mt-1">Générez un token dans l’interface Proxmox (Datacenter → Permissions → API Tokens).</p>
               </div>
@@ -334,7 +370,13 @@ export default function ConnectionPage() {
                 </label>
               </div>
               {error && (
-                <div aria-live="assertive" className="animate-shake bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative text-sm flex items-center gap-2 shadow-sm mb-2">
+                <div
+                  aria-live="assertive"
+                  role="alert"
+                  tabIndex={-1}
+                  className="animate-shake bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative text-sm flex items-center gap-2 shadow-sm mb-2"
+                  id="form-error"
+                >
                   <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" /></svg>
                   {error}
                 </div>
@@ -346,6 +388,7 @@ export default function ConnectionPage() {
                   className="flex-1 flex items-center justify-center gap-2"
                   onClick={handleTestConnection}
                   disabled={loading}
+                  aria-disabled={loading}
                 >
                   {loading ? (
                     <>
@@ -359,7 +402,9 @@ export default function ConnectionPage() {
                 <Button
                   type="submit"
                   className="flex-1 flex items-center justify-center gap-2"
-                  disabled={loading}
+                  disabled={loading || submitLocked}
+                  aria-disabled={loading || submitLocked}
+                  aria-describedby={error ? "form-error" : undefined}
                 >
                   {loading ? (
                     <>
@@ -370,15 +415,15 @@ export default function ConnectionPage() {
                     "Enregistrer"
                   )}
                 </Button>
-                  {/* Indicateur de statut du test de connexion */}
-                  <div className="flex items-center gap-1 text-sm">
-                    {currentTestStatus === "pending" && <Loader2 className="animate-spin w-4 h-4 text-gray-500" />}
-                    {currentTestStatus === "online" && <CircleDot className="w-4 h-4 text-green-600" />}
-                    {currentTestStatus === "offline" && <CircleOff className="w-4 h-4 text-red-600" />}
-                    <span className={currentTestStatus === "online" ? "text-green-600" : currentTestStatus === "offline" ? "text-red-600" : "text-gray-600"}>
-                      {currentTestStatus === "pending" ? "Test en cours" : currentTestStatus === "online" ? "Connecté" : currentTestStatus === "offline" ? "Déconnecté" : ""}
-                    </span>
-                  </div>
+                {/* Indicateur de statut du test de connexion */}
+                <div className="flex items-center gap-1 text-sm" aria-live="polite">
+                  {currentTestStatus === "pending" && <Loader2 className="animate-spin w-4 h-4 text-gray-500" />}
+                  {currentTestStatus === "online" && <CircleDot className="w-4 h-4 text-green-600" />}
+                  {currentTestStatus === "offline" && <CircleOff className="w-4 h-4 text-red-600" />}
+                  <span className={currentTestStatus === "online" ? "text-green-600" : currentTestStatus === "offline" ? "text-red-600" : "text-gray-600"}>
+                    {currentTestStatus === "pending" ? "Test en cours" : currentTestStatus === "online" ? "Connecté" : currentTestStatus === "offline" ? "Déconnecté" : ""}
+                  </span>
+                </div>
               </div>
             </form>
           </CardContent>

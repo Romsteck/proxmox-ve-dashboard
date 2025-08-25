@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start -p 15000",
     "lint": "next lint",
+    "test": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
