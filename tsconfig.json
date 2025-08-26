@@ -15,6 +15,7 @@
     "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
